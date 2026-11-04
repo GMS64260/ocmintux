@@ -23,7 +23,7 @@ mkdir -p "$DEPOT/pool/main/o/ocmintux" "$DEPOT/dists/ocmintux/main/binary-amd64"
 for deb in "$@"; do cp -f "$deb" "$DEPOT/pool/main/o/ocmintux/"; done
 cp -f "$ICI/../depot/ocmintux-apt.asc" "$DEPOT/ocmintux-apt.asc"
 gpg --batch --yes --dearmor -o "$DEPOT/ocmintux.gpg" "$DEPOT/ocmintux-apt.asc"
-cp -f "$ICI/../paquet/etc/apt/sources.list.d/ocmintux.sources" "$DEPOT/ocmintux.sources"
+cp -f "$ICI/../paquet/ocmintux/etc/apt/sources.list.d/ocmintux.sources" "$DEPOT/ocmintux.sources"
 
 cd "$DEPOT"
 # Un seul index (amd64) : le paquet est « Architecture: all ».
