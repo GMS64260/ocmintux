@@ -21,6 +21,29 @@ Description: logiciels éducatifs d'OcMintux, du CP au CM2
  (Stellarium), échecs, et OpenBoard pour le tableau numérique des
  enseignants.
 
+Package: ocmintux-escola
+Architecture: all
+Version: 0.1.2
+Priority: optional
+Section: education
+Maintainer: Guillaume GOMES DA NAVE <guillaume.gomes@laposte.net>
+Depends: gcompris-qt, tuxpaint, tuxmath, tuxtype
+Recommends: tuxpaint-stamps-default, ktouch, klettres, kgeography, pysiogame, stellarium, gnome-chess, openboard
+Filename: pool/main/o/ocmintux/ocmintux-escola_0.1.2_all.deb
+Size: 1096
+MD5sum: b68842022ae32badd48fe60f3bbc6b93
+SHA1: 7b77266935feac2434ce64f4b2afe8d22e02d369
+SHA256: 7cee5ebaf86d8c857ab8241cdac2cdef212cb6172524b5a6965ba85de9ad8457
+SHA512: d28c2cfed512a3f67c657df54b266a48cdbcfd344516aeeeec99d96cdbec2890e5a937e69b0145e30db8d0d4dc40cda8dcc81e6a72e4095778712484de1242f4
+Homepage: https://github.com/GMS64260/ocmintux
+Description: logiciels éducatifs d'OcMintux, du CP au CM2
+ Paquet sans contenu qui installe les logiciels éducatifs d'OcMintux :
+ GCompris, Tux Paint, TuxMath, Tux Typing ; et, en recommandations (que
+ l'on peut désinstaller une à une) : frappe au clavier (KTouch), lettres
+ (KLettres), géographie (KGeography), calcul (Pysiogame), astronomie
+ (Stellarium), échecs, et OpenBoard pour le tableau numérique des
+ enseignants.
+
 Package: ocmintux
 Architecture: all
 Version: 0.1.1
@@ -36,6 +59,31 @@ MD5sum: 10a1c6544456442b177727feeec06b03
 SHA1: 3b21639e1a6af99d7dbd7cfde1c26ce2d81f4e01
 SHA256: 703f0c794c579343fb3df6241c163c328ebdcc104f9981b123965013c91a5dfe
 SHA512: c9207ec649598742f4d06a729d9f79f40890cf1bf7c8ac7127737e6b8b4605db4cf253bd2fbf772f04fb6c8b149cbbdf5e0461aa63439fa045915c9fb534d26c
+Homepage: https://github.com/GMS64260/ocmintux
+Description: Linux Mint en occitan pour les Calandretas
+ OcMintux passe un PC Linux Mint Cinnamon en occitan, pour les élèves du CP
+ au CM2 et leurs enseignants : interface en occitan avec repli en français
+ pour ce qui n'est pas traduit, clavier AZERTY occitan, Firefox, LibreOffice
+ et dictionnaire en occitan, compte des élèves sans mot de passe et filtré,
+ mises à jour automatiques, fond d'écran OcMintux.
+ .
+ Réglages dans /etc/ocmintux/ocmintux.conf, appliqués par « sudo ocmintux-config ».
+
+Package: ocmintux
+Architecture: all
+Version: 0.1.2
+Priority: optional
+Section: localization
+Maintainer: Guillaume GOMES DA NAVE <guillaume.gomes@laposte.net>
+Depends: locales, keyboard-configuration, language-pack-oc, language-pack-gnome-oc, language-pack-fr, language-pack-gnome-fr, adduser, passwd
+Recommends: ocmintux-escola, firefox-locale-oc, firefox-locale-fr, libreoffice-l10n-oc, libreoffice-l10n-fr, hunspell-oc, hunspell-fr, mintupdate
+Conflicts: occitux
+Filename: pool/main/o/ocmintux/ocmintux_0.1.2_all.deb
+Size: 170040
+MD5sum: 98076daa525018538bf00bb476b6a159
+SHA1: 088dfad24bfe0be0ed3741525c6e1a02c895230f
+SHA256: 2d6f20b2284c6141143a3c9d6e85df8692f9d6e5a8194b461a947b5fdf09964b
+SHA512: 053f0b0177723a9337f07882946fff5c65023cef448555576341856b50142c812eee8002b0faacb1bcb19a3e59630e495d552fa525ca8342d0dbc1dbe5099516
 Homepage: https://github.com/GMS64260/ocmintux
 Description: Linux Mint en occitan pour les Calandretas
  OcMintux passe un PC Linux Mint Cinnamon en occitan, pour les élèves du CP
