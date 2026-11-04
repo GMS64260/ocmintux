@@ -35,4 +35,4 @@ OcMintux doit tourner sur ces iMac (Core i5 quatre cœurs, Radeon HD 6750M/6770M
 - **D'abord essayer** : sur le premier iMac, « Ensajar OcMintux » (rien n'est effacé) pour vérifier écran, Wi-Fi et son.
 - **Écran noir ou brouillé** : la carte graphique AMD de ces iMac tombe souvent en panne (panne matérielle). Essayer « Ensajar OcMintux (mòde de compatibilitat) ». Si l'image reste brouillée, le PC n'est pas à garder.
 - **Mémoire** : 4 Go suffisent, 8 Go sont plus confortables (barrettes DDR3 SO-DIMM 1333 MHz, trappe sous l'écran).
-- **Disque** : le disque dur d'origine ralentit tout. Le remplacer par un SSD demande de démonter la vitre et l'écran, et un adaptateur pour le capteur de température d'Apple (sinon les ventilateurs tournent à fond).
+- **Disque** : le disque dur d'origine ralentit tout. Le remplacer par un SSD demande de démonter la vitre et l'écran. Sans la sonde de température du disque, le Mac fait tourner le ventilateur du disque très vite : OcMintux le règle tout seul d'après les vraies températures (essayé sur un iMac12,1 : 4 100 → 1 200 tr/min au repos). Pour voir : `ocmintux-ventilation --etat` dans un terminal.

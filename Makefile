@@ -2,10 +2,11 @@ VERSION := $(shell sed -n 's/^Version: //p' paquet/ocmintux/DEBIAN/control)
 DEB     := construction/ocmintux_$(VERSION)_all.deb
 ESCOLA_VERSION := $(shell sed -n 's/^Version: //p' paquet/ocmintux-escola/DEBIAN/control)
 ESCOLA  := construction/ocmintux-escola_$(ESCOLA_VERSION)_all.deb
-SCRIPTS := paquet/ocmintux/usr/sbin/ocmintux-config paquet/ocmintux/usr/share/ocmintux/session-eleves.sh \
+SCRIPTS := paquet/ocmintux/usr/sbin/ocmintux-config paquet/ocmintux/usr/sbin/ocmintux-ventilation \
+           paquet/ocmintux/usr/share/ocmintux/session-eleves.sh \
            paquet/ocmintux/DEBIAN/postinst paquet/ocmintux/DEBIAN/prerm paquet/ocmintux/DEBIAN/postrm \
            construire/construire-iso.sh construire/essayer-vm.sh construire/depot-apt.sh \
-           construire/preseed/choisir-disque.sh construire/preseed/apres-installation.sh
+           construire/preseed/choisir-disque.sh construire/preseed/apres-installation.sh construire/essai-ventilation.sh
 
 # Catalogues béarnais : traductions/gascon/<domaine>.po → <domaine>.mo, dans
 # /usr/share/locale/oc@gascon (LANGUE=bearnes : LANGUAGE=oc_FR@gascon:oc:fr).
@@ -21,7 +22,7 @@ $(DEB): $(shell find paquet/ocmintux -type f) $(PO) identite/ocmintux.svg identi
 	rm -rf $(RACINE)
 	mkdir -p $(RACINE)
 	cp -a paquet/ocmintux/. $(RACINE)/
-	chmod 0755 $(RACINE)/usr/sbin/ocmintux-config $(RACINE)/usr/share/ocmintux/session-eleves.sh \
+	chmod 0755 $(RACINE)/usr/sbin/ocmintux-config $(RACINE)/usr/sbin/ocmintux-ventilation $(RACINE)/usr/share/ocmintux/session-eleves.sh \
 	           $(RACINE)/DEBIAN/postinst $(RACINE)/DEBIAN/prerm $(RACINE)/DEBIAN/postrm
 	mkdir -p $(RACINE)/usr/share/ocmintux/identite $(RACINE)/usr/share/backgrounds/ocmintux \
 	         $(RACINE)/usr/share/keyrings $(RACINE)/usr/share/pixmaps

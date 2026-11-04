@@ -1,0 +1,183 @@
+#!/bin/bash
+# ocmintux-ventilation : ventilateur « HDD » des iMac passés au SSD.
+#
+# Sur un iMac (2009-2011 notamment), remplacer le disque dur par un SSD fait
+# perdre la sonde de température du disque : la puce de gestion du Mac (SMC)
+# fait alors tourner le ventilateur du disque vite, par prudence (4 100 tr/min
+# relevés sur un iMac12,1). Ce service pilote ce seul ventilateur d'après les
+# températures réelles : SSD (module drivetemp), alimentation, carte
+# graphique et processeur. Les autres ventilateurs restent à la SMC.
+#
+# Au moindre doute (capteur illisible, arrêt du service), le ventilateur est
+# rendu à la SMC (mode automatique).
+#
+#   ocmintux-ventilation              boucle (service systemd)
+#   ocmintux-ventilation --une-fois   une mesure, un réglage (essais)
+#   ocmintux-ventilation --auto       rend le ventilateur à la SMC
+#   ocmintux-ventilation --etat       températures et vitesses
+#
+# OCMINTUX_SMC, OCMINTUX_HWMON, OCMINTUX_CONF : autres chemins, pour les essais.
+set -uo pipefail
+
+CONF=${OCMINTUX_CONF:-/etc/ocmintux/ocmintux.conf}
+SMC=${OCMINTUX_SMC:-/sys/devices/platform/applesmc.768}
+HWMON=${OCMINTUX_HWMON:-/sys/class/hwmon}
+PERIODE=5
+PLANCHER=1200          # tr/min au minimum, même au froid
+
+VENTILATEUR_DISQUE=${VENTILATEUR_DISQUE:-auto}
+# shellcheck source=/dev/null
+[ -r "$CONF" ] && . "$CONF"
+
+journal() { echo "ocmintux-ventilation : $*" >&2; }
+
+# Ventilateur dont l'étiquette est « HDD » (fanN).
+VENT=
+for f in "$SMC"/fan*_label; do
+    [ -f "$f" ] || continue
+    if [ "$(tr -d ' \n' < "$f")" = HDD ]; then VENT=${f%_label}; break; fi
+done
+
+rendre_a_la_smc() {
+    [ -n "$VENT" ] && [ -w "${VENT}_manual" ] && echo 0 > "${VENT}_manual" 2>/dev/null
+    return 0
+}
+
+# Plus haute température (en millièmes de degré) d'une liste de fichiers, ou
+# rien si aucun n'est lisible.
+plus_chaud() {
+    local f v max=
+    for f in "$@"; do
+        [ -r "$f" ] || continue
+        v=$(cat "$f" 2>/dev/null) || continue
+        [[ "$v" =~ ^[0-9]+$ ]] || continue
+        # Valeurs absurdes (sonde absente : 0, 5, 9 °C, ou plus de 125 °C).
+        { [ "$v" -ge 15000 ] && [ "$v" -le 125000 ]; } || continue
+        if [ -z "$max" ] || [ "$v" -gt "$max" ]; then max=$v; fi
+    done
+    echo "$max"
+}
+
+# Températures de la SMC dont l'étiquette commence par un préfixe.
+capteurs_smc() {
+    local prefixe=$1 f
+    for f in "$SMC"/temp*_label; do
+        [ -f "$f" ] || continue
+        case "$(tr -d ' \n' < "$f")" in "$prefixe"*) echo "${f%_label}_input" ;; esac
+    done
+}
+
+# Capteurs hwmon d'un pilote (drivetemp, coretemp...).
+capteurs_hwmon() {
+    local pilote=$1 h
+    for h in "$HWMON"/*; do
+        [ "$(cat "$h/name" 2>/dev/null)" = "$pilote" ] || continue
+        ls "$h"/temp*_input 2>/dev/null
+    done
+}
+
+# Vitesse voulue pour une température t (m°C) : minimum en dessous de bas,
+# maximum au-dessus de haut, droite entre les deux.
+rampe() {
+    local t=$1 bas=$(( $2 * 1000 )) haut=$(( $3 * 1000 )) mini=$4 maxi=$5
+    [ -n "$t" ] || { echo 0; return; }
+    if [ "$t" -le "$bas" ]; then echo "$mini"
+    elif [ "$t" -ge "$haut" ]; then echo "$maxi"
+    else echo $(( mini + (maxi - mini) * (t - bas) / (haut - bas) ))
+    fi
+}
+
+mesurer() {
+    # mapfile : les chemins de sysfs n'ont pas d'espace.
+    local fichiers
+    mapfile -t fichiers < <(capteurs_hwmon drivetemp)
+    T_SSD=$(plus_chaud "${fichiers[@]}")
+    mapfile -t fichiers < <(capteurs_smc Tp)
+    T_ALIM=$(plus_chaud "${fichiers[@]}")
+    mapfile -t fichiers < <(capteurs_smc TG)
+    T_GPU=$(plus_chaud "${fichiers[@]}")
+    mapfile -t fichiers < <(capteurs_hwmon coretemp)
+    T_CPU=$(plus_chaud "${fichiers[@]}")
+}
+
+# Le ventilateur ne refroidit plus de disque dur : on ne le pilote que si le
+# disque interne est un SSD (ou si on le demande, VENTILATEUR_DISQUE=ssd).
+disque_interne_ssd() {
+    local d
+    for d in /sys/block/sd? /sys/block/nvme?n?; do
+        [ -e "$d" ] || continue
+        [ "$(cat "$d/removable" 2>/dev/null)" = 0 ] || continue
+        readlink -f "$d" | grep -q '/usb' && continue
+        [ "$(cat "$d/queue/rotational" 2>/dev/null)" = 0 ] && return 0
+    done
+    return 1
+}
+
+regler() {
+    local mini maxi cible v
+    mesurer
+    # Sans température du SSD, on ne sait pas : la SMC décide.
+    if [ -z "$T_SSD" ]; then
+        journal "température du SSD illisible : ventilateur rendu à la SMC"
+        rendre_a_la_smc; return 1
+    fi
+    mini=$(cat "${VENT}_min" 2>/dev/null || echo 1100)
+    maxi=$(cat "${VENT}_max" 2>/dev/null || echo 6000)
+    [ "$mini" -ge "$PLANCHER" ] || mini=$PLANCHER
+    cible=$mini
+    for v in "$(rampe "$T_SSD" 45 65 "$mini" "$maxi")" \
+             "$(rampe "$T_ALIM" 55 75 "$mini" "$maxi")" \
+             "$(rampe "$T_GPU" 70 90 "$mini" "$maxi")" \
+             "$(rampe "$T_CPU" 75 95 "$mini" "$maxi")"; do
+        [ "$v" -gt "$cible" ] && cible=$v
+    done
+    if ! { echo 1 > "${VENT}_manual" && echo "$cible" > "${VENT}_output"; }; then
+        rendre_a_la_smc; return 1
+    fi
+    CIBLE=$cible
+}
+
+etat() {
+    local f n
+    mesurer
+    printf 'SSD %s °C, alimentation %s °C, carte graphique %s °C, processeur %s °C\n' \
+        "${T_SSD:+$((T_SSD / 1000))}" "${T_ALIM:+$((T_ALIM / 1000))}" \
+        "${T_GPU:+$((T_GPU / 1000))}" "${T_CPU:+$((T_CPU / 1000))}"
+    for f in "$SMC"/fan*_label; do
+        [ -f "$f" ] || continue
+        n=${f%_label}
+        printf '%s : %s tr/min (%s)\n' "$(tr -d ' \n' < "$f")" "$(cat "${n}_input")" \
+            "$([ "$(cat "${n}_manual" 2>/dev/null)" = 1 ] && echo OcMintux || echo SMC)"
+    done
+}
+
+case "${1:-}" in
+    --auto) rendre_a_la_smc; exit 0 ;;
+    --etat) etat; exit 0 ;;
+esac
+
+if [ -z "$VENT" ]; then
+    echo "ocmintux-ventilation : pas de ventilateur « HDD » (pas un iMac ?), rien à faire"
+    exit 0
+fi
+case "$VENTILATEUR_DISQUE" in
+    non) rendre_a_la_smc; echo "ocmintux-ventilation : désactivé (VENTILATEUR_DISQUE=non)"; exit 0 ;;
+    ssd) ;;
+    auto) disque_interne_ssd || { rendre_a_la_smc; echo "ocmintux-ventilation : disque dur interne, la SMC garde la main"; exit 0; } ;;
+    *) echo "ocmintux-ventilation : VENTILATEUR_DISQUE=$VENTILATEUR_DISQUE inconnu (auto, ssd ou non)" >&2; exit 1 ;;
+esac
+[ -z "${OCMINTUX_SMC:-}" ] && { modprobe drivetemp 2>/dev/null || true; }
+
+if [ "${1:-}" = --une-fois ]; then
+    regler && echo "ventilateur HDD : $CIBLE tr/min"
+    exit 0
+fi
+
+trap 'rendre_a_la_smc; exit 0' TERM INT
+trap 'rendre_a_la_smc' EXIT
+CIBLE=
+journal "pilotage du ventilateur HDD (SSD, alimentation, carte graphique, processeur)"
+while true; do
+    regler || true
+    sleep "$PERIODE"
+done

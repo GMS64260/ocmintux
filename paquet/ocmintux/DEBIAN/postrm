@@ -7,10 +7,14 @@ set -e
 case "$1" in
     remove|purge)
         deb-systemd-helper disable ocmintux-premier-demarrage.service >/dev/null || true
+        deb-systemd-helper disable ocmintux-ventilation.service >/dev/null || true
         ;;
 esac
 
 if [ "$1" = purge ]; then
     rm -rf /var/lib/ocmintux
+    rm -f /etc/ocmintux/ocmintux.conf
+    rmdir /etc/ocmintux 2>/dev/null || true
     deb-systemd-helper purge ocmintux-premier-demarrage.service >/dev/null || true
+    deb-systemd-helper purge ocmintux-ventilation.service >/dev/null || true
 fi

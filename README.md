@@ -22,6 +22,7 @@ Besoins : ceux de Linux Mint 22.3 : PC 64 bits, 2 Go de mémoire (4 Go recommand
 | **Installation** | ISO OcMintux : session d'essai et installateur en occitan. ISO de déploiement : le PC s'installe sans une question (tout le disque est effacé), nom de PC `ocmintux-xxxx`, compte des enseignants créé avec le mot de passe choisi à la construction. |
 | **Clavier** | AZERTY occitan (`fr(oci)`) : les lettres occitanes en accès direct. Pour un clavier Apple (iMac) : `CLAVIER=mac`, disposition « Occitan (Macintosh) » d'OcMintux, symboles à leur place et lettres occitanes avec la touche Option de droite (Option+a á, i í, o ó, p ò, u ú). |
 | **Mises à jour** | Celles du gestionnaire de mises à jour de Mint, automatiques, une fois par jour : Ubuntu, Mint et nouvelles versions d'OcMintux (dépôt apt du projet). |
+| **iMac passés au SSD** | Le ventilateur du disque, qui tournait vite faute de sonde (4 100 tr/min relevés sur un iMac 2011), est réglé d'après les vraies températures (SSD, alimentation, carte graphique, processeur) : 1 200 tr/min au repos. Le Mac reprend la main au moindre doute. `ocmintux-ventilation --etat` pour voir. |
 | **Identité** | Fond d'écran et écran de connexion OcMintux, nom du système (`PRETTY_NAME`), menus de démarrage de la clé. |
 
 Tout se règle dans un seul fichier, `/etc/ocmintux/ocmintux.conf`.
@@ -47,7 +48,7 @@ Redémarrer le PC. Le paquet ajoute le dépôt apt d'OcMintux (`https://gms64260
 ## Changer un réglage
 
 ```sh
-sudo xed /etc/ocmintux/ocmintux.conf   # LANGUE, CLAVIER (oci, azerty, mac), MISES_A_JOUR_AUTO, compte des élèves, filtrage
+sudo xed /etc/ocmintux/ocmintux.conf   # LANGUE, CLAVIER (oci, azerty, mac), MISES_A_JOUR_AUTO, compte des élèves, filtrage, VENTILATEUR_DISQUE
 sudo ocmintux-config
 ```
 

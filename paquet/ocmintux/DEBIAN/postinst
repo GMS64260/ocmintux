@@ -1,10 +1,41 @@
 #!/bin/sh
 set -e
 
+# Réglages : /etc/ocmintux/ocmintux.conf appartient à l'administrateur du PC
+# (pas un fichier de configuration de dpkg, qui poserait une question à
+# chaque mise à jour et bloquerait les mises à jour automatiques). Créé depuis
+# le modèle s'il manque ; ensuite, seuls les réglages nouveaux y sont ajoutés,
+# avec leur explication, sans toucher aux valeurs choisies.
+MODELE=/usr/share/ocmintux/ocmintux.conf
+CONF=/etc/ocmintux/ocmintux.conf
+mettre_a_jour_reglages() {
+    mkdir -p /etc/ocmintux
+    if [ ! -e "$CONF" ]; then
+        cp "$MODELE" "$CONF"
+        return 0
+    fi
+    awk -v conf="$CONF" '
+        BEGIN {
+            while ((getline ligne < conf) > 0)
+                if (match(ligne, /^[A-Z_]+=/)) connu[substr(ligne, 1, RLENGTH - 1)] = 1
+        }
+        { bloc = bloc $0 "\n" }
+        /^[A-Z_]+=/ { cle = $0; sub(/=.*/, "", cle); if (!(cle in connu)) nouveau = 1 }
+        /^$/ { if (nouveau) printf "\n%s", bloc; bloc = ""; nouveau = 0 }
+        END { if (nouveau) printf "\n%s", bloc }
+    ' "$MODELE" >> "$CONF"
+}
+
 case "$1" in
     configure)
+        mettre_a_jour_reglages
         ocmintux-config || echo "ocmintux : réglages incomplets, ils seront refaits au prochain démarrage" >&2
         deb-systemd-helper enable ocmintux-premier-demarrage.service >/dev/null || true
+        deb-systemd-helper enable ocmintux-ventilation.service >/dev/null || true
+        # Système démarré (pas l'ISO en construction) : réglage tout de suite.
+        if [ -d /run/systemd/system ] && [ -z "${OCMINTUX_CONSTRUCTION:-}" ]; then
+            deb-systemd-invoke restart ocmintux-ventilation.service >/dev/null || true
+        fi
         ;;
     triggered)
         ocmintux-config --declenche || true

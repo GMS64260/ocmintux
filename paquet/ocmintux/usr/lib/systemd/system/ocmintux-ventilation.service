@@ -1,0 +1,16 @@
+[Unit]
+Description=OcMintux : ventilateur du disque des iMac passés au SSD
+# Seulement sur un Mac (puce SMC) ; le script vérifie le reste (ventilateur
+# « HDD », disque interne SSD) et rend la main à la SMC sinon.
+ConditionPathExists=/sys/devices/platform/applesmc.768
+After=systemd-modules-load.service
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/ocmintux-ventilation
+ExecStopPost=/usr/sbin/ocmintux-ventilation --auto
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

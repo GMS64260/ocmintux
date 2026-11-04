@@ -6,5 +6,9 @@ case "$1" in
         # Mint reprend son nom ; les fichiers générés pour Firefox et la
         # session sont retirés tant que les scripts d'ocmintux sont là.
         ocmintux-config --retirer || true
+        # Le ventilateur revient à la puce du Mac (ExecStopPost du service).
+        if [ -d /run/systemd/system ]; then
+            deb-systemd-invoke stop ocmintux-ventilation.service >/dev/null || true
+        fi
         ;;
 esac

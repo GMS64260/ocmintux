@@ -20,6 +20,9 @@ jobs:
       - name: Vérifier les scripts
         run: make verifier
 
+      - name: Essayer le réglage du ventilateur des iMac (fausse puce SMC)
+        run: ./construire/essai-ventilation.sh
+
       - name: Construire les paquets
         run: make paquets
 
@@ -95,6 +98,13 @@ jobs:
             test "$(grep -c "<name>ocmintux</name>" /usr/share/X11/xkb/rules/evdev.xml)" = 1
             test "$(grep -c "<!-- /ocmintux -->" /usr/share/X11/xkb/rules/evdev.xml)" = 1
             test "$(grep -c "<name>ocmintux</name>" /usr/share/X11/xkb/rules/base.xml)" = 1
+            # Réglages : un réglage nouveau est ajouté, les valeurs choisies restent
+            sed -i "/VENTILATEUR_DISQUE/d" /etc/ocmintux/ocmintux.conf
+            dpkg-reconfigure ocmintux
+            grep -x "VENTILATEUR_DISQUE=auto" /etc/ocmintux/ocmintux.conf
+            grep -x "LANGUE=bearnes" /etc/ocmintux/ocmintux.conf
+            grep -x "CLAVIER=mac" /etc/ocmintux/ocmintux.conf
+            test "$(grep -c "^LANGUE=" /etc/ocmintux/ocmintux.conf)" = 1
             # Un réglage faux est refusé
             sed -i "s/^COMPTE_ELEVES=.*/COMPTE_ELEVES=peut-etre/" /etc/ocmintux/ocmintux.conf
             if ocmintux-config; then exit 1; fi
@@ -104,6 +114,7 @@ jobs:
             test "$(grep -c OcMintux /usr/lib/os-release)" = 0
             test ! -e /usr/lib/firefox/ocmintux.cfg
             test ! -e /etc/X11/Xsession.d/90ocmintux-langue
+            test ! -e /etc/ocmintux/ocmintux.conf
             test "$(grep -c ocmintux /usr/share/X11/xkb/rules/evdev.xml)" = 0
             grep -x "XKBVARIANT=\"oci\"" /etc/default/keyboard
             id escolans
