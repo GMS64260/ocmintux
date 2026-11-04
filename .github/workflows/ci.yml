@@ -117,7 +117,8 @@ jobs:
           export GNUPGHOME=$(mktemp -d)
           gpg --batch --quick-gen-key --passphrase "" "Essai CI <essai@example.org>" rsa2048 sign never
           ./construire/depot-apt.sh "$RUNNER_TEMP/depot" construction/*.deb
-          gpgv --keyring <(gpg --export) "$RUNNER_TEMP/depot/dists/ocmintux/InRelease"
+          gpg --export > "$RUNNER_TEMP/essai.gpg"
+          gpgv --keyring "$RUNNER_TEMP/essai.gpg" "$RUNNER_TEMP/depot/dists/ocmintux/InRelease"
           test -f "$RUNNER_TEMP/depot/ocmintux.sources"
 
       - uses: actions/upload-artifact@v7
