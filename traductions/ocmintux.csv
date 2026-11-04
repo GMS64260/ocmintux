@@ -1,0 +1,17 @@
+clau;frances;occitan;bearnes
+demarrage.titre;Bienvenue sur OcMintux;Benvenguda sus OcMintux;Benvienguda sus OcMintux
+demarrage.essayer;Essayer OcMintux;Ensajar OcMintux;Ensajar OcMintux
+demarrage.essayer_compat;Essayer OcMintux (mode de compatibilité);Ensajar OcMintux (mòde de compatibilitat);Ensajar OcMintux (mòde de compatibilitat)
+demarrage.installer;Installer OcMintux;Installar OcMintux;Installar OcMintux
+demarrage.installer_auto;Installer OcMintux automatiquement (efface tout le disque);Installar OcMintux automaticament (escafa tot lo disc);Installar OcMintux automaticament (desfaça tot lo disc)
+demarrage.oem;Installation pour les fabricants (OEM);Installacion pels fabricants (OEM);Installacion entaus fabricants (OEM)
+demarrage.memoire;Tester la mémoire;Testar la memòria;Testar la memòria
+demarrage.volume_suivant;Démarrer sur le disque suivant;Aviar sul disc seguent;Aviar sus lo disc seguent
+demarrage.micrologiciel;Réglages du micrologiciel UEFI;Paramètres del micrologicial UEFI;Paramètres deu micrologiciau UEFI
+demarrage.disque_local;Démarrer sur le disque dur;Aviar sul disc dur;Aviar sus lo disc dur
+demarrage.materiel;Détection du matériel;Deteccion del material;Deteccion deu material
+demarrage.avertissement_auto;ATTENTION : dans 20 secondes, OcMintux s'installe tout seul et efface tout le disque de ce PC. Pour l'éviter, retirez la clé et redémarrez.;ATENCION : dins 20 segondas, OcMintux s'installa tot sol e escafa tot lo disc d'aqueste PC. Per o evitar, levar la clau e reaviar.;ATENCION : dens 20 segondas, OcMintux que s'installa solet e que desfaça tot lo disc d'aqueste PC. Entà ac evitar, tirar la clau e tornar aviar.
+fin.retirer_cle;Retirez la clé USB, puis appuyez sur Entrée : ;Levar la clau USB, puèi quichar sus Entrada : ;Tirar la clau USB, puish prémer Entrada : 
+fin.retirer_cle_redemarrer;Retirez la clé USB, puis redémarrez.;Levar la clau USB, puèi reaviar.;Tirar la clau USB, puish tornar aviar.
+compte.enseignants;Enseignant;Regent;Regent
+compte.eleves;Élèves;Escolans;Escolans

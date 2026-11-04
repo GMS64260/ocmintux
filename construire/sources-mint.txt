@@ -1,0 +1,5 @@
+# ISO officielles de Linux Mint acceptées par construire-iso.sh.
+# Nom du fichier, puis somme SHA-256 (sha256sum.txt de Mint, signature GPG
+# vérifiée avec la clé 27DE B156 44C6 B3CF 3BD7 D291 300F 846B A25B AE09).
+# Source : https://www.linuxmint.com/download.php
+linuxmint-22.3-cinnamon-64bit.iso a081ab202cfda17f6924128dbd2de8b63518ac0531bcfe3f1a1b88097c459bd4

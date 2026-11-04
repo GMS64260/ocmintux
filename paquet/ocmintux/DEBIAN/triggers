@@ -1,0 +1,4 @@
+# Quand base-files réécrit le nom du système, ou xkb-data la liste des
+# dispositions de clavier, ocmintux refait ses ajouts (ocmintux-config --declenche).
+interest-noawait /usr/lib/os-release
+interest-noawait /usr/share/X11/xkb/rules

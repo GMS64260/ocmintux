@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=OcMintux
+Comment=Réglages de la session des élèves
+Exec=/usr/share/ocmintux/session-eleves.sh
+NoDisplay=true
+X-GNOME-Autostart-Phase=Initialization

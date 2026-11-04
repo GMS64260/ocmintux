@@ -1,0 +1,16 @@
+Package: ocmintux-escola
+Version: 0.1.0
+Architecture: all
+Section: education
+Priority: optional
+Maintainer: Guillaume GOMES DA NAVE <guillaume.gomes@laposte.net>
+Homepage: https://github.com/GMS64260/ocmintux
+Depends: gcompris-qt, tuxpaint, tuxmath, tuxtype
+Recommends: tuxpaint-stamps-default, ktouch, klettres, kgeography, pysiogame, stellarium, gnome-chess, openboard
+Description: logiciels éducatifs d'OcMintux, du CP au CM2
+ Paquet sans contenu qui installe les logiciels éducatifs d'OcMintux :
+ GCompris, Tux Paint, TuxMath, Tux Typing ; et, en recommandations (que
+ l'on peut désinstaller une à une) : frappe au clavier (KTouch), lettres
+ (KLettres), géographie (KGeography), calcul (Pysiogame), astronomie
+ (Stellarium), échecs, et OpenBoard pour le tableau numérique des
+ enseignants.

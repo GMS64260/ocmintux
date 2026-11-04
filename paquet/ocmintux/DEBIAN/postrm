@@ -1,0 +1,16 @@
+#!/bin/sh
+# La langue, le clavier, les mises à jour automatiques et le compte des
+# élèves restent tels quels après la désinstallation : ce sont des réglages
+# du système, que l'on change avec les outils de Mint.
+set -e
+
+case "$1" in
+    remove|purge)
+        deb-systemd-helper disable ocmintux-premier-demarrage.service >/dev/null || true
+        ;;
+esac
+
+if [ "$1" = purge ]; then
+    rm -rf /var/lib/ocmintux
+    deb-systemd-helper purge ocmintux-premier-demarrage.service >/dev/null || true
+fi

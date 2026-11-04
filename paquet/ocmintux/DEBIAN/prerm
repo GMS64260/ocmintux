@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove)
+        # Mint reprend son nom ; les fichiers générés pour Firefox et la
+        # session sont retirés tant que les scripts d'ocmintux sont là.
+        ocmintux-config --retirer || true
+        ;;
+esac

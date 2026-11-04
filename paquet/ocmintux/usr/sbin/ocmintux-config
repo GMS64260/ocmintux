@@ -1,0 +1,384 @@
+#!/bin/bash
+# ocmintux-config : applique /etc/ocmintux/ocmintux.conf au système.
+#
+# Lancé par le paquet à l'installation, puis une fois au premier démarrage
+# (l'installateur réécrit la langue et le clavier après la copie du système),
+# puis à la main après chaque modification des réglages.
+#
+#   sudo ocmintux-config                    applique les réglages
+#   ocmintux-config --premier-demarrage     utilisé par le service systemd
+#   ocmintux-config --declenche             après la mise à jour d'un paquet
+#                                           de Mint (déclencheur dpkg) :
+#                                           refait seulement l'identité
+#   ocmintux-config --retirer               désinstallation (prerm)
+set -euo pipefail
+
+CONF=/etc/ocmintux/ocmintux.conf
+ETAT=/var/lib/ocmintux
+PARTAGE=/usr/share/ocmintux
+MODE=${1:-}
+
+LANGUE=oc
+CLAVIER=oci
+MISES_A_JOUR_AUTO=oui
+COMPTE_ELEVES=oui
+ELEVES_IDENTIFIANT=escolans
+ELEVES_NOM=Escolans
+FILTRE_WEB_ELEVES=oui
+ACCUEIL_ELEVES=https://www.qwantjunior.com/
+# shellcheck source=/dev/null
+[ -r "$CONF" ] && . "$CONF"
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "ocmintux-config : à lancer avec sudo" >&2
+    exit 1
+fi
+
+# Remplace CLE=... dans un fichier, ou l'ajoute s'il n'y est pas.
+fixer() {
+    local fichier=$1 cle=$2 valeur=$3
+    touch "$fichier"
+    if grep -q "^${cle}=" "$fichier"; then
+        sed -i "s|^${cle}=.*|${cle}=${valeur}|" "$fichier"
+    else
+        echo "${cle}=${valeur}" >> "$fichier"
+    fi
+}
+
+oui_ou_non() {
+    case "$2" in
+        oui|non) ;;
+        *) echo "ocmintux-config : $1=$2 inconnu (oui ou non)" >&2; return 1 ;;
+    esac
+}
+
+# Langue d'un compte, comme LANG (oc_FR.UTF-8...).
+LANG_SYSTEME=oc_FR.UTF-8
+REPLI=oc:fr
+choisir_langue() {
+    # bearnes : les catalogues béarnais d'OcMintux (/usr/share/locale/oc@gascon)
+    # passent d'abord ; ce qu'ils ne traduisent pas retombe sur l'occitan, puis
+    # sur le français.
+    case "$LANGUE" in
+        bearnes) LANG_SYSTEME=oc_FR.UTF-8; REPLI=oc_FR@gascon:oc:fr ;;
+        oc)      LANG_SYSTEME=oc_FR.UTF-8; REPLI=oc:fr ;;
+        fr)      LANG_SYSTEME=fr_FR.UTF-8; REPLI=fr ;;
+        *)       echo "ocmintux-config : LANGUE=$LANGUE inconnue (bearnes, oc ou fr)" >&2; return 1 ;;
+    esac
+}
+
+# Session graphique : LightDM donne à la session la langue du compte (LANG),
+# mais pas d'ordre de repli. Sans LANGUAGE=oc:fr, un logiciel non traduit en
+# occitan s'afficherait en anglais. Le script est lu par lightdm-session avant
+# 95dbus_update-activation-env, qui transmet l'environnement aux services.
+XSESSION_LANGUE=/etc/X11/Xsession.d/90ocmintux-langue
+appliquer_langue() {
+    local compte
+    locale-gen "$LANG_SYSTEME" fr_FR.UTF-8 >/dev/null
+    update-locale LANG="$LANG_SYSTEME" LANGUAGE="$REPLI"
+
+    # La langue choisie par compte (outil « Langues » de Mint, installateur)
+    # passe avant celle du système : on l'aligne.
+    for compte in /var/lib/AccountsService/users/*; do
+        [ -f "$compte" ] || continue
+        sed -i -e "s|^Language=.*|Language=${LANG_SYSTEME}|" \
+               -e "s|^Languages=.*|Languages=${LANG_SYSTEME};|" "$compte"
+    done
+
+    if [ -d "$(dirname "$XSESSION_LANGUE")" ]; then
+        cat > "$XSESSION_LANGUE" <<EOF
+# Généré par ocmintux-config : modifier /etc/ocmintux/ocmintux.conf à la place.
+# Session en occitan : ce qui n'est pas traduit s'affiche en français.
+case "\${LANG:-}" in
+    oc_FR*|oc.*|oc)
+        case "\${LANGUAGE:-}" in
+            ""|oc|oc_FR|oc_FR.UTF-8|oc_FR.utf8) LANGUAGE="$REPLI"; export LANGUAGE ;;
+        esac ;;
+esac
+EOF
+    fi
+    echo "langue : $LANG_SYSTEME (repli : $REPLI)"
+}
+
+# Les logiciels qui ne connaissent pas l'occitan et ne savent pas se replier
+# sur le français : on les règle en français.
+#
+# GCompris, réglé sur « system », cherche une traduction oc_FR, ne la trouve
+# pas et s'affiche en anglais, sans voix. Ses réglages vivent dans le dossier
+# de chaque compte ; le modèle /etc/skel sert aux comptes créés ensuite.
+GCOMPRIS_TRADUCTIONS=/usr/share/gcompris-qt/translations
+appliquer_gcompris() {
+    local d conf locale
+    if [ "$LANGUE" = fr ] || compgen -G "$GCOMPRIS_TRADUCTIONS/gcompris_oc*.qm" >/dev/null; then
+        locale=system
+    else
+        locale=fr_FR.UTF-8
+    fi
+    for d in /etc/skel /home/*; do
+        [ -d "$d" ] || continue
+        conf=$d/.config/gcompris/gcompris-qt.conf
+        if [ -f "$conf" ]; then
+            if grep -q '^locale=' "$conf"; then
+                sed -i "s|^locale=.*|locale=${locale}|" "$conf"
+            else
+                sed -i "s|^\[General\]\$|[General]\nlocale=${locale}|" "$conf"
+            fi
+        elif [ "$locale" != system ]; then
+            mkdir -p "$(dirname "$conf")"
+            printf '[General]\nlocale=%s\n' "$locale" > "$conf"
+            [ "$d" = /etc/skel ] || chown -R --reference="$d" "$d/.config/gcompris"
+        fi
+    done
+    echo "GCompris : ${locale/system/langue du système}"
+}
+
+# Firefox (paquet Mint, /usr/lib/firefox) : réglages d'OcMintux par
+# « autoconfig ». Pour tous : les sites sans occitan s'affichent en français
+# (Firefox en occitan demanderait « occitan, puis anglais »). Pour le compte
+# des élèves : filtrage DNS4EU (protection des enfants) par DNS chiffré, sans
+# repli possible sur un autre DNS, et page d'accueil, verrouillés.
+FIREFOX=/usr/lib/firefox
+DNS_ELEVES=https://child-noads.joindns4.eu/dns-query
+appliquer_firefox() {
+    [ -d "$FIREFOX/defaults/pref" ] || return 0
+    cat > "$FIREFOX/defaults/pref/ocmintux.js" <<'EOF'
+// Généré par ocmintux-config : réglages d'OcMintux dans /usr/lib/firefox/ocmintux.cfg.
+pref("general.config.filename", "ocmintux.cfg");
+pref("general.config.obscure_value", 0);
+EOF
+    {
+        echo "// Généré par ocmintux-config : modifier /etc/ocmintux/ocmintux.conf à la place."
+        if [ "$LANGUE" != fr ]; then
+            echo 'defaultPref("intl.accept_languages", "oc, fr-FR, fr, en-US, en");'
+        fi
+        if [ "$COMPTE_ELEVES" = oui ]; then
+            echo "if (getenv(\"USER\") == \"$ELEVES_IDENTIFIANT\") {"
+            if [ "$FILTRE_WEB_ELEVES" = oui ]; then
+                echo "    lockPref(\"network.trr.mode\", 3);"
+                echo "    lockPref(\"network.trr.uri\", \"$DNS_ELEVES\");"
+                echo "    lockPref(\"network.trr.custom_uri\", \"$DNS_ELEVES\");"
+                echo "    lockPref(\"doh-rollout.disable-heuristics\", true);"
+            fi
+            if [ -n "$ACCUEIL_ELEVES" ]; then
+                echo "    lockPref(\"browser.startup.homepage\", \"$ACCUEIL_ELEVES\");"
+                echo "    lockPref(\"browser.startup.page\", 1);"
+            fi
+            echo "}"
+        fi
+    } > "$FIREFOX/ocmintux.cfg"
+    local filtre=
+    [ "$COMPTE_ELEVES" = oui ] && [ "$FILTRE_WEB_ELEVES" = oui ] && filtre=", élèves filtrés (DNS4EU)"
+    if [ "$LANGUE" = fr ]; then
+        echo "Firefox : réglages d'OcMintux$filtre"
+    else
+        echo "Firefox : sites en occitan, puis en français$filtre"
+    fi
+}
+
+# Clavier. « mac » : disposition occitane d'OcMintux pour clavier Apple
+# français (/usr/share/X11/xkb/symbols/ocmintux), lettres occitanes sur la
+# touche Option de droite.
+appliquer_clavier() {
+    local disposition=fr variante
+    case "$CLAVIER" in
+        oci)    variante=oci ;;
+        azerty) variante= ;;
+        mac)    disposition=ocmintux; variante=mac ;;
+        *)      echo "ocmintux-config : CLAVIER=$CLAVIER inconnu (oci, azerty ou mac)" >&2; return 1 ;;
+    esac
+    fixer /etc/default/keyboard XKBLAYOUT "\"${disposition}\""
+    fixer /etc/default/keyboard XKBVARIANT "\"${variante}\""
+    # Système démarré (pas l'ISO en construction) : le serveur graphique lit
+    # la disposition dans les propriétés udev du clavier, posées au démarrage.
+    if [ -d /run/udev ] && [ -z "${OCMINTUX_CONSTRUCTION:-}" ] && command -v udevadm >/dev/null; then
+        udevadm trigger --subsystem-match=input --action=change 2>/dev/null || true
+    fi
+    echo "clavier : ${disposition}${variante:+($variante)}"
+}
+
+# La disposition « Occitan (Macintosh) » doit figurer dans la liste des
+# dispositions de XKB (rules/evdev.xml et base.xml, fichiers de xkb-data) :
+# sans elle, Cinnamon l'écarte et passe le clavier en anglais (us), et
+# l'écran de connexion n'affiche pas son nom. Une mise à jour de xkb-data
+# réécrit ces fichiers : le déclencheur dpkg refait l'ajout.
+REGLES_XKB="/usr/share/X11/xkb/rules/evdev.xml /usr/share/X11/xkb/rules/base.xml"
+appliquer_registre_xkb() {
+    local f tmp
+    for f in $REGLES_XKB; do
+        { [ -f "$f" ] && [ ! -L "$f" ]; } || continue
+        grep -q '<!-- ocmintux -->' "$f" && continue
+        grep -q '^  </layoutList>' "$f" || continue
+        tmp=$(mktemp "$f.ocmintux.XXXXXX")
+        awk 'done == 0 && /^  <\/layoutList>/ {
+                print "    <!-- ocmintux -->"
+                print "    <layout>"
+                print "      <configItem>"
+                print "        <name>ocmintux</name>"
+                print "        <shortDescription>oc</shortDescription>"
+                print "        <description>Occitan (Macintosh)</description>"
+                print "        <languageList>"
+                print "          <iso639Id>oci</iso639Id>"
+                print "        </languageList>"
+                print "      </configItem>"
+                print "      <variantList>"
+                print "        <variant>"
+                print "          <configItem>"
+                print "            <name>mac</name>"
+                print "            <description>Occitan (Macintosh)</description>"
+                print "          </configItem>"
+                print "        </variant>"
+                print "      </variantList>"
+                print "    </layout>"
+                print "    <!-- /ocmintux -->"
+                done = 1
+             }
+             { print }' "$f" > "$tmp"
+        chmod 644 "$tmp"
+        mv "$tmp" "$f"
+    done
+}
+
+retirer_registre_xkb() {
+    local f
+    for f in $REGLES_XKB; do
+        [ -f "$f" ] && sed -i '/<!-- ocmintux -->/,/<!-- \/ocmintux -->/d' "$f"
+    done
+    return 0
+}
+
+# Mises à jour automatiques : celles du gestionnaire de mises à jour de Mint
+# (mintupdate-automation), qui suit les règles de Mint (noyaux, paquets
+# bloqués) et installe aussi les nouvelles versions d'OcMintux (dépôt apt du
+# projet, sources.list.d/ocmintux.sources). Réglage visible dans
+# « Gestionnaire de mises à jour > Édition > Préférences > Automatisation ».
+appliquer_mises_a_jour() {
+    local action
+    case "$MISES_A_JOUR_AUTO" in
+        oui) action=enable ;;
+        non) action=disable ;;
+        *)   echo "ocmintux-config : MISES_A_JOUR_AUTO=$MISES_A_JOUR_AUTO inconnu (oui ou non)" >&2; return 1 ;;
+    esac
+    if ! command -v mintupdate-automation >/dev/null; then
+        echo "mises à jour automatiques : mintupdate absent (pas un Linux Mint ?), rien changé"
+        return 0
+    fi
+    # En chroot (construction de l'ISO), systemctl n'active que les liens.
+    mintupdate-automation upgrade "$action" >/dev/null 2>&1 || true
+    mintupdate-automation autoremove "$action" >/dev/null 2>&1 || true
+    echo "mises à jour automatiques : $MISES_A_JOUR_AUTO"
+}
+
+# Ce que le système dit de lui-même : seul le nom affiché (PRETTY_NAME) change.
+# NAME, ID et noms de code restent ceux de Mint : ses outils et les logiciels
+# tiers en dépendent. /usr/lib/os-release n'est pas un fichier de configuration
+# (contrairement à /etc/lsb-release ou /etc/linuxmint/info, qu'on ne touche
+# pas pour ne pas bloquer les mises à jour sur une question de dpkg) ; une mise
+# à jour de base-files le réécrit, le déclencheur dpkg refait le nom.
+OS_RELEASE=/usr/lib/os-release
+appliquer_identite() {
+    local version mint
+    [ -f "$OS_RELEASE" ] || return 0
+    mkdir -p "$ETAT"
+    if ! grep -q '^PRETTY_NAME="OcMintux' "$OS_RELEASE"; then
+        cp -p "$OS_RELEASE" "$ETAT/os-release.origine"
+    fi
+    [ -f "$ETAT/os-release.origine" ] || return 0
+    version=$(dpkg-query -W -f '${Version}' ocmintux 2>/dev/null || true)
+    # shellcheck source=/dev/null
+    mint=$(. "$ETAT/os-release.origine"; echo "${PRETTY_NAME:-}")
+    fixer "$OS_RELEASE" PRETTY_NAME "\"OcMintux${version:+ $version}${mint:+ ($mint)}\""
+    echo "identité : OcMintux${version:+ $version}${mint:+ ($mint)}"
+}
+
+# Compte des élèves : connexion sans mot de passe (groupe nopasswdlogin, prévu
+# par la configuration PAM de LightDM sur Mint), aucun droit d'administration.
+# L'écran ne se verrouille jamais (le déverrouillage demanderait un mot de
+# passe), l'écran d'accueil de Mint et l'icône des mises à jour sont masqués.
+ICONE_ELEVES=$PARTAGE/identite/escolans.png
+appliquer_eleves() {
+    local id=$ELEVES_IDENTIFIANT maison groupe f
+    [ "$COMPTE_ELEVES" = oui ] || { echo "compte des élèves : non"; return 0; }
+    # Construction de l'ISO : l'installateur de Mint (Ubiquity) ne crée aucun
+    # compte s'il en trouve déjà un (UID 1000 à 59999) dans le système copié.
+    # Le compte des élèves bloquerait celui des enseignants : il est créé au
+    # premier démarrage du PC installé (service ocmintux-premier-demarrage).
+    if [ -n "${OCMINTUX_CONSTRUCTION:-}" ]; then
+        echo "compte des élèves : créé au premier démarrage du PC installé"
+        return 0
+    fi
+    case "$id" in
+        ''|*[!a-z0-9_-]*) echo "ocmintux-config : ELEVES_IDENTIFIANT=$id invalide (minuscules, chiffres, - et _)" >&2; return 1 ;;
+    esac
+    if ! id "$id" >/dev/null 2>&1; then
+        adduser --quiet --disabled-password --gecos "$ELEVES_NOM" "$id" >/dev/null
+    elif [ "$(getent passwd "$id" | cut -d: -f5 | cut -d, -f1)" != "$ELEVES_NOM" ]; then
+        usermod -c "$ELEVES_NOM" "$id"
+    fi
+    getent group nopasswdlogin >/dev/null || addgroup --quiet --system nopasswdlogin
+    usermod -aG nopasswdlogin "$id"
+    for groupe in sudo adm lpadmin sambashare; do
+        if id -nG "$id" | tr ' ' '\n' | grep -qx "$groupe"; then
+            gpasswd -d "$id" "$groupe" >/dev/null
+        fi
+    done
+
+    maison=$(getent passwd "$id" | cut -d: -f6)
+    mkdir -p "$maison/.linuxmint/mintwelcome" "$maison/.config/autostart"
+    touch "$maison/.linuxmint/mintwelcome/norun.flag"
+    printf '[Desktop Entry]\nType=Application\nName=mintupdate\nHidden=true\n' \
+        > "$maison/.config/autostart/mintupdate.desktop"
+    chown -R "$id:$id" "$maison/.linuxmint" "$maison/.config"
+
+    # Nom et image à l'écran de connexion.
+    mkdir -p /var/lib/AccountsService/users
+    f=/var/lib/AccountsService/users/$id
+    [ -f "$f" ] || printf '[User]\nSystemAccount=false\n' > "$f"
+    fixer "$f" Language "$LANG_SYSTEME"
+    if [ -f "$ICONE_ELEVES" ]; then
+        mkdir -p /var/lib/AccountsService/icons
+        cp "$ICONE_ELEVES" "/var/lib/AccountsService/icons/$id"
+        fixer "$f" Icon "/var/lib/AccountsService/icons/$id"
+    fi
+    echo "compte des élèves : $id ($ELEVES_NOM), sans mot de passe"
+}
+
+retirer() {
+    if [ -f "$ETAT/os-release.origine" ] && [ -f "$OS_RELEASE" ]; then
+        cp -p "$ETAT/os-release.origine" "$OS_RELEASE"
+    fi
+    rm -f "$XSESSION_LANGUE" "$FIREFOX/defaults/pref/ocmintux.js" "$FIREFOX/ocmintux.cfg"
+    retirer_registre_xkb
+    # Un clavier réglé sur la disposition d'OcMintux, qui va disparaître :
+    # retour à l'AZERTY occitan, connu de Mint.
+    if grep -q '^XKBLAYOUT="ocmintux"' /etc/default/keyboard 2>/dev/null; then
+        sed -i 's/^XKBLAYOUT=.*/XKBLAYOUT="fr"/; s/^XKBVARIANT=.*/XKBVARIANT="oci"/' /etc/default/keyboard
+    fi
+    # Le compte des élèves et ses fichiers restent : on ne supprime pas le
+    # travail des élèves. « sudo deluser --remove-home escolans » pour l'enlever.
+}
+
+case "$MODE" in
+    --retirer)   retirer; exit 0 ;;
+    --declenche) appliquer_identite; appliquer_registre_xkb; exit 0 ;;
+    ''|--premier-demarrage) ;;
+    *) echo "usage : sudo ocmintux-config" >&2; exit 1 ;;
+esac
+
+oui_ou_non COMPTE_ELEVES "$COMPTE_ELEVES"
+oui_ou_non FILTRE_WEB_ELEVES "$FILTRE_WEB_ELEVES"
+choisir_langue
+appliquer_langue
+appliquer_registre_xkb
+appliquer_clavier
+appliquer_mises_a_jour
+appliquer_identite
+appliquer_eleves
+appliquer_gcompris
+appliquer_firefox
+
+if [ "$MODE" = --premier-demarrage ]; then
+    mkdir -p "$ETAT"
+    touch "$ETAT/premier-demarrage-fait"
+else
+    echo "Redémarrer le PC pour que tout soit pris en compte."
+fi

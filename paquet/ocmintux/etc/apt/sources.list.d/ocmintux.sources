@@ -1,0 +1,8 @@
+# Dépôt apt d'OcMintux : les nouvelles versions des paquets ocmintux
+# s'installent avec les autres mises à jour (voir /etc/ocmintux/ocmintux.conf).
+# Publié par la CI du projet : https://github.com/GMS64260/ocmintux
+Types: deb
+URIs: https://gms64260.github.io/ocmintux
+Suites: ocmintux
+Components: main
+Signed-By: /usr/share/keyrings/ocmintux.gpg

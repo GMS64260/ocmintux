@@ -1,0 +1,14 @@
+[Unit]
+Description=OcMintux : réglages occitans au premier démarrage
+ConditionPathExists=!/var/lib/ocmintux/premier-demarrage-fait
+# Pas dans la session d'essai de la clé USB.
+ConditionKernelCommandLine=!boot=casper
+After=local-fs.target
+Before=display-manager.service accounts-daemon.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/ocmintux-config --premier-demarrage
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+Package: ocmintux
+Version: 0.1.0
+Architecture: all
+Section: localization
+Priority: optional
+Maintainer: Guillaume GOMES DA NAVE <guillaume.gomes@laposte.net>
+Homepage: https://github.com/GMS64260/ocmintux
+Depends: locales, keyboard-configuration, language-pack-oc, language-pack-gnome-oc, language-pack-fr, language-pack-gnome-fr, adduser, passwd
+Recommends: ocmintux-escola, firefox-locale-oc, firefox-locale-fr, libreoffice-l10n-oc, libreoffice-l10n-fr, hunspell-oc, hunspell-fr, mintupdate
+Conflicts: occitux
+Description: Linux Mint en occitan pour les Calandretas
+ OcMintux passe un PC Linux Mint Cinnamon en occitan, pour les élèves du CP
+ au CM2 et leurs enseignants : interface en occitan avec repli en français
+ pour ce qui n'est pas traduit, clavier AZERTY occitan, Firefox, LibreOffice
+ et dictionnaire en occitan, compte des élèves sans mot de passe et filtré,
+ mises à jour automatiques, fond d'écran OcMintux.
+ .
+ Réglages dans /etc/ocmintux/ocmintux.conf, appliqués par « sudo ocmintux-config ».

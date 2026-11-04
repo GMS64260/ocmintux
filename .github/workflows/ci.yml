@@ -1,0 +1,162 @@
+name: paquets
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  paquets:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Outils de construction
+        run: sudo apt-get install -y -q gettext shellcheck librsvg2-bin x11-xkb-utils >/dev/null
+
+      - name: Vérifier les scripts
+        run: make verifier
+
+      - name: Construire les paquets
+        run: make paquets
+
+      # Même base que Linux Mint 22 (Ubuntu 24.04). Sans les recommandations :
+      # sur Ubuntu, firefox-locale-oc tirerait le snap de Firefox, et mintupdate
+      # n'existe pas. Firefox de Mint simulé par son dossier de réglages.
+      - name: Installer le paquet dans Ubuntu 24.04
+        run: |
+          docker run --rm -v "$PWD/construction:/deb:ro" ubuntu:24.04 bash -euxc '
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -q
+            mkdir -p /usr/lib/firefox/defaults/pref /etc/X11/Xsession.d /usr/share/gcompris-qt/translations
+            # Un compte existant (enseignant), avec son réglage GCompris
+            useradd -m -s /bin/bash regent
+            mkdir -p /home/regent/.config/gcompris
+            printf "[General]\nlocale=system\n" > /home/regent/.config/gcompris/gcompris-qt.conf
+            apt-get install -y -q --no-install-recommends /deb/ocmintux_*_all.deb
+            # Langue, repli, clavier
+            grep -x "LANG=oc_FR.UTF-8" /etc/default/locale
+            grep -x "LANGUAGE=oc:fr" /etc/default/locale
+            locale -a | grep -qi "^oc_FR.utf8$"
+            locale -a | grep -qi "^fr_FR.utf8$"
+            grep -q "LANGUAGE=\"oc:fr\"" /etc/X11/Xsession.d/90ocmintux-langue
+            test "$(env -i LANG=oc_FR.UTF-8 sh -c ". /etc/X11/Xsession.d/90ocmintux-langue; echo \$LANGUAGE")" = "oc:fr"
+            test "$(env -i LANG=fr_FR.UTF-8 sh -c ". /etc/X11/Xsession.d/90ocmintux-langue; echo \$LANGUAGE")" = ""
+            grep -x "XKBVARIANT=\"oci\"" /etc/default/keyboard
+            # Nom du système
+            grep -q "^PRETTY_NAME=\"OcMintux 0" /usr/lib/os-release
+            grep -q "^NAME=\"Ubuntu\"" /usr/lib/os-release
+            # Compte des élèves : sans mot de passe, sans droits
+            id escolans
+            id -nG escolans | grep -qw nopasswdlogin
+            test -z "$(id -nG escolans | grep -ow sudo)"
+            test -f /home/escolans/.linuxmint/mintwelcome/norun.flag
+            grep -x "Hidden=true" /home/escolans/.config/autostart/mintupdate.desktop
+            test "$(stat -c %U /home/escolans/.config/autostart)" = escolans
+            grep -x "Icon=/var/lib/AccountsService/icons/escolans" /var/lib/AccountsService/users/escolans
+            # GCompris (sans occitan) en français pour tous
+            grep -x "locale=fr_FR.UTF-8" /home/regent/.config/gcompris/gcompris-qt.conf
+            grep -x "locale=fr_FR.UTF-8" /home/escolans/.config/gcompris/gcompris-qt.conf
+            grep -x "locale=fr_FR.UTF-8" /etc/skel/.config/gcompris/gcompris-qt.conf
+            # Firefox : repli en français, filtrage verrouillé pour les élèves
+            grep -q "general.config.filename\", \"ocmintux.cfg\"" /usr/lib/firefox/defaults/pref/ocmintux.js
+            grep -q "\"oc, fr-FR, fr, en-US, en\"" /usr/lib/firefox/ocmintux.cfg
+            grep -q "getenv(\"USER\") == \"escolans\"" /usr/lib/firefox/ocmintux.cfg
+            grep -q "lockPref(\"network.trr.mode\", 3)" /usr/lib/firefox/ocmintux.cfg
+            grep -q "child-noads.joindns4.eu/dns-query" /usr/lib/firefox/ocmintux.cfg
+            # Fond d écran, catalogue béarnais, dépôt apt
+            test -f /usr/share/backgrounds/ocmintux/ocmintux.png
+            test -f /usr/share/locale/oc@gascon/LC_MESSAGES/tuxpaint.mo
+            test -s /usr/share/keyrings/ocmintux.gpg
+            # Autres réglages : français, clavier habituel, sans filtre
+            sed -i "s/^LANGUE=.*/LANGUE=fr/; s/^CLAVIER=.*/CLAVIER=azerty/; s/^FILTRE_WEB_ELEVES=.*/FILTRE_WEB_ELEVES=non/" /etc/ocmintux/ocmintux.conf
+            ocmintux-config
+            grep -x "LANG=fr_FR.UTF-8" /etc/default/locale
+            grep -x "XKBVARIANT=\"\"" /etc/default/keyboard
+            grep -x "locale=system" /home/regent/.config/gcompris/gcompris-qt.conf
+            test "$(grep -c network.trr /usr/lib/firefox/ocmintux.cfg)" = 0
+            test "$(grep -c accept_languages /usr/lib/firefox/ocmintux.cfg)" = 0
+            sed -i "s/^LANGUE=.*/LANGUE=bearnes/" /etc/ocmintux/ocmintux.conf
+            ocmintux-config
+            grep -x "LANGUAGE=oc_FR@gascon:oc:fr" /etc/default/locale
+            # Clavier Apple : disposition occitane d OcMintux
+            sed -i "s/^CLAVIER=.*/CLAVIER=mac/" /etc/ocmintux/ocmintux.conf
+            ocmintux-config
+            grep -x "XKBLAYOUT=\"ocmintux\"" /etc/default/keyboard
+            grep -x "XKBVARIANT=\"mac\"" /etc/default/keyboard
+            test -f /usr/share/X11/xkb/symbols/ocmintux
+            test "$(grep -c "<name>ocmintux</name>" /usr/share/X11/xkb/rules/evdev.xml)" = 1
+            ocmintux-config
+            test "$(grep -c "<name>ocmintux</name>" /usr/share/X11/xkb/rules/evdev.xml)" = 1
+            test "$(grep -c "<!-- /ocmintux -->" /usr/share/X11/xkb/rules/evdev.xml)" = 1
+            test "$(grep -c "<name>ocmintux</name>" /usr/share/X11/xkb/rules/base.xml)" = 1
+            # Un réglage faux est refusé
+            sed -i "s/^COMPTE_ELEVES=.*/COMPTE_ELEVES=peut-etre/" /etc/ocmintux/ocmintux.conf
+            if ocmintux-config; then exit 1; fi
+            sed -i "s/^COMPTE_ELEVES=.*/COMPTE_ELEVES=oui/" /etc/ocmintux/ocmintux.conf
+            # Désinstallation : le nom de Mint revient, le compte des élèves reste
+            apt-get purge -y -q ocmintux
+            test "$(grep -c OcMintux /usr/lib/os-release)" = 0
+            test ! -e /usr/lib/firefox/ocmintux.cfg
+            test ! -e /etc/X11/Xsession.d/90ocmintux-langue
+            test "$(grep -c ocmintux /usr/share/X11/xkb/rules/evdev.xml)" = 0
+            grep -x "XKBVARIANT=\"oci\"" /etc/default/keyboard
+            id escolans
+          '
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ocmintux-deb
+          path: construction/*.deb
+
+      - name: Publier les paquets avec la version
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" construction/*.deb \
+            --title "OcMintux $GITHUB_REF_NAME" \
+            --notes "Paquets à installer sur Linux Mint 22.3 Cinnamon : sudo apt install ./ocmintux_*_all.deb ./ocmintux-escola_*_all.deb. Les PC OcMintux les reçoivent tout seuls par le dépôt apt."
+
+  # Dépôt apt sur GitHub Pages (branche gh-pages) : les PC OcMintux reçoivent
+  # chaque version publiée avec les autres mises à jour.
+  depot:
+    needs: paquets
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ocmintux-deb
+          path: construction
+
+      - name: Dépôt existant (gh-pages)
+        run: |
+          git fetch origin gh-pages:gh-pages 2>/dev/null && git worktree add depot-pages gh-pages || { mkdir depot-pages; git -C depot-pages init -q -b gh-pages; }
+
+      - name: Clé de signature
+        env:
+          CLE: ${{ secrets.OCMINTUX_CLE_APT }}
+        run: |
+          sudo apt-get install -y -q apt-utils >/dev/null
+          test -n "$CLE" || { echo "secret OCMINTUX_CLE_APT manquant" >&2; exit 1; }
+          echo "$CLE" | gpg --batch --import
+
+      - name: Construire et signer le dépôt
+        run: ./construire/depot-apt.sh depot-pages construction/*.deb
+
+      - name: Publier sur gh-pages
+        run: |
+          cd depot-pages
+          git config user.name "OcMintux CI"
+          git config user.email "ocmintux-ci@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Dépôt apt : ocmintux $GITHUB_REF_NAME" || exit 0
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages

@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        ocmintux-config || echo "ocmintux : réglages incomplets, ils seront refaits au prochain démarrage" >&2
+        deb-systemd-helper enable ocmintux-premier-demarrage.service >/dev/null || true
+        ;;
+    triggered)
+        ocmintux-config --declenche || true
+        ;;
+esac

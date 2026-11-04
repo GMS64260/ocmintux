@@ -1,0 +1,12 @@
+# OcMintux : fond d'écran et écran de connexion. Lu après celui de Mint
+# (mint-artwork.gschema.override), par ordre alphabétique.
+[org.cinnamon.desktop.background]
+picture-uri='file:///usr/share/backgrounds/ocmintux/ocmintux.png'
+picture-options='zoom'
+
+[org.gnome.desktop.background]
+picture-uri='file:///usr/share/backgrounds/ocmintux/ocmintux.png'
+
+[x.dm.slick-greeter]
+background='/usr/share/backgrounds/ocmintux/ocmintux.png'
+draw-user-backgrounds=false

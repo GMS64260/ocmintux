@@ -1,0 +1,26 @@
+// OcMintux : disposition occitane pour clavier Apple français (AZERTY Macintosh).
+//
+// C'est fr(mac) (symboles à leur place sur un clavier Apple), avec les lettres
+// occitanes sur la touche Option de droite, comme fr(oci) sur un clavier PC :
+//   Option+a á   Option+i í   Option+o ó   Option+p ò   Option+u ú
+//   (avec Maj : Á Í Ó Ò Ú), Option+^ œ.
+// Les accents de fr(mac) restent : é è à ç ù en accès direct, ò aussi par la
+// touche ` (à gauche d'Entrée) puis o, ^ et ¨ par la touche à droite du P.
+//
+// Réglage : CLAVIER=mac dans /etc/ocmintux/ocmintux.conf (XKBLAYOUT=ocmintux,
+// XKBVARIANT=mac). Licence GPL-3.0-or-later.
+
+default partial alphanumeric_keys
+xkb_symbols "mac" {
+
+    include "fr(mac)"
+
+    name[Group1]= "Occitan (Macintosh)";
+
+    key <AD01>	{[               a,              A,           aacute,       Aacute ]}; // a A á Á
+    key <AD07>	{[               u,              U,           uacute,       Uacute ]}; // u U ú Ú
+    key <AD08>	{[               i,              I,           iacute,       Iacute ]}; // i I í Í
+    key <AD09>	{[               o,              O,           oacute,       Oacute ]}; // o O ó Ó
+    key <AD10>	{[               p,              P,           ograve,       Ograve ]}; // p P ò Ò
+    key <AD11>	{[ dead_circumflex, dead_diaeresis,               oe,           OE ]}; // ^ ¨ œ Œ
+};
