@@ -41,15 +41,17 @@ $(ESCOLA): paquet/ocmintux-escola/DEBIAN/control
 	dpkg-deb --root-owner-group -Zxz --build paquet/ocmintux-escola $@
 
 # make iso ISO=/chemin/linuxmint-22.3-cinnamon-64bit.iso
+# Réglages par défaut des PC : OCMINTUX_LANGUE=oc|bearnes|fr, OCMINTUX_CLAVIER=oci|azerty|mac
 iso: paquets
 	@test -n "$(ISO)" || { echo "usage : make iso ISO=/chemin/vers/linuxmint-22.3-cinnamon-64bit.iso"; exit 1; }
-	sudo ./construire/construire-iso.sh "$(ISO)" construction/ocmintux-$(VERSION).iso $(DEB) $(ESCOLA)
+	sudo OCMINTUX_LANGUE="$(OCMINTUX_LANGUE)" OCMINTUX_CLAVIER="$(OCMINTUX_CLAVIER)" \
+	    ./construire/construire-iso.sh "$(ISO)" construction/ocmintux-$(VERSION).iso $(DEB) $(ESCOLA)
 
 # ISO de déploiement : installation sans un clic, EFFACE LE DISQUE du PC.
 # make deploiement ISO=... : le mot de passe du compte des enseignants est demandé.
 deploiement: paquets
 	@test -n "$(ISO)" || { echo "usage : make deploiement ISO=/chemin/vers/linuxmint.iso"; exit 1; }
-	sudo OCMINTUX_INSTALLATION=automatique \
+	sudo OCMINTUX_INSTALLATION=automatique OCMINTUX_LANGUE="$(OCMINTUX_LANGUE)" OCMINTUX_CLAVIER="$(OCMINTUX_CLAVIER)" \
 	    ./construire/construire-iso.sh "$(ISO)" construction/ocmintux-$(VERSION)-deploiement.iso $(DEB) $(ESCOLA)
 
 # Disposition occitane pour clavier Apple : doit se compiler avec xkbcomp.
