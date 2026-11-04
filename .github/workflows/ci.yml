@@ -30,6 +30,8 @@ jobs:
         run: |
           docker run --rm -v "$PWD/construction:/deb:ro" ubuntu:24.04 bash -euxc '
             export DEBIAN_FRONTEND=noninteractive
+            # Image Docker minimisée : dpkg y écarte les traductions, pas Mint
+            rm -f /etc/dpkg/dpkg.cfg.d/excludes
             apt-get update -q
             mkdir -p /usr/lib/firefox/defaults/pref /etc/X11/Xsession.d /usr/share/gcompris-qt/translations
             # Un compte existant (enseignant), avec son réglage GCompris
