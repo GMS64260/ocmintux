@@ -1,0 +1,11 @@
+# Logiciels lancés en français quand le PC est en occitan (LANGUE=oc ou
+# bearnes) : ils n'ont pas de traduction occitane et, au lieu de se replier
+# sur le français, s'affichent en anglais. Une ligne par logiciel : nom de son
+# fichier .desktop (sans .desktop), puis éventuellement des options ajoutées
+# à sa commande. Autres logiciels : APPLIS_EN_FRANCAIS dans
+# /etc/ocmintux/ocmintux.conf.
+org.stellarium.Stellarium
+openboard
+ch.openboard.OpenBoard
+# Tux Typing : menus déjà en français (repli), mais mots anglais par défaut.
+tuxtype --theme french

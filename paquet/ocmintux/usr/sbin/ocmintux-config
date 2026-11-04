@@ -26,6 +26,7 @@ ELEVES_IDENTIFIANT=escolans
 ELEVES_NOM=Escolans
 FILTRE_WEB_ELEVES=oui
 ACCUEIL_ELEVES=https://www.qwantjunior.com/
+APPLIS_EN_FRANCAIS=
 # shellcheck source=/dev/null
 [ -r "$CONF" ] && . "$CONF"
 
@@ -130,6 +131,39 @@ appliquer_gcompris() {
         fi
     done
     echo "GCompris : ${locale/system/langue du système}"
+}
+
+# Logiciels sans occitan qui basculent en anglais au lieu du français : leur
+# entrée de menu est recopiée dans /usr/local/share/applications (lu avant
+# /usr/share/applications) avec une commande qui les lance en français. Liste
+# dans /usr/share/ocmintux/applis-en-francais, plus APPLIS_EN_FRANCAIS. Refait
+# par le déclencheur dpkg quand un paquet change ses entrées de menu.
+MENUS=/usr/share/applications
+MENUS_OCMINTUX=/usr/local/share/applications
+MARQUE_MENU="X-OcMintux=lenga-francesa"
+retirer_applis_francais() {
+    local f
+    for f in "$MENUS_OCMINTUX"/*.desktop; do
+        [ -f "$f" ] && grep -qx "$MARQUE_MENU" "$f" && rm -f "$f"
+    done
+    return 0
+}
+appliquer_applis_francais() {
+    local id options ligne n=0
+    retirer_applis_francais
+    [ "$LANGUE" = fr ] && return 0
+    mkdir -p "$MENUS_OCMINTUX"
+    while read -r id options; do
+        case "$id" in ''|'#'*) continue ;; esac
+        [ -f "$MENUS/$id.desktop" ] || continue
+        # Exec=prog args -> Exec=env LANG=fr_FR.UTF-8 LANGUAGE=fr prog options args ;
+        # sans DBusActivatable, qui lancerait le logiciel sans passer par Exec.
+        sed -e "s|^Exec=\([^ ]*\)|Exec=env LANG=fr_FR.UTF-8 LANGUAGE=fr \1${options:+ $options}|" \
+            -e '/^DBusActivatable=/d' "$MENUS/$id.desktop" > "$MENUS_OCMINTUX/$id.desktop"
+        sed -i "0,/^\[Desktop Entry\]/s||[Desktop Entry]\n$MARQUE_MENU|" "$MENUS_OCMINTUX/$id.desktop"
+        n=$((n + 1))
+    done < <(cat "$PARTAGE/applis-en-francais" 2>/dev/null; for ligne in $APPLIS_EN_FRANCAIS; do echo "$ligne"; done)
+    echo "logiciels lancés en français : $n"
 }
 
 # Firefox (paquet Mint, /usr/lib/firefox) : réglages d'OcMintux par
@@ -347,6 +381,7 @@ retirer() {
         cp -p "$ETAT/os-release.origine" "$OS_RELEASE"
     fi
     rm -f "$XSESSION_LANGUE" "$FIREFOX/defaults/pref/ocmintux.js" "$FIREFOX/ocmintux.cfg"
+    retirer_applis_francais
     retirer_registre_xkb
     # Un clavier réglé sur la disposition d'OcMintux, qui va disparaître :
     # retour à l'AZERTY occitan, connu de Mint.
@@ -359,7 +394,7 @@ retirer() {
 
 case "$MODE" in
     --retirer)   retirer; exit 0 ;;
-    --declenche) appliquer_identite; appliquer_registre_xkb; exit 0 ;;
+    --declenche) choisir_langue; appliquer_identite; appliquer_registre_xkb; appliquer_applis_francais >/dev/null; exit 0 ;;
     ''|--premier-demarrage) ;;
     *) echo "usage : sudo ocmintux-config" >&2; exit 1 ;;
 esac
@@ -375,6 +410,7 @@ appliquer_identite
 appliquer_eleves
 appliquer_gcompris
 appliquer_firefox
+appliquer_applis_francais
 
 if [ "$MODE" = --premier-demarrage ]; then
     mkdir -p "$ETAT"

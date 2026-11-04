@@ -19,6 +19,9 @@
 
 ## 0.2 : finitions
 
+- [x] Logiciels sans occitan lancés en français au lieu de l'anglais (Stellarium, OpenBoard ; mots français dans Tux Typing) : `/usr/share/ocmintux/applis-en-francais`, `APPLIS_EN_FRANCAIS`
+- [ ] Logiciels éducatifs de PrimTux (dépôt PrimTux, liste fermée) : en attente de l'accord de Guillaume
+
 - [ ] Diaporama de l'installateur : déjà en occitan chez Mint (vu en VM) ; y présenter OcMintux et les Calandretas
 - [ ] Logo OcMintux dans le menu Cinnamon et au démarrage (Plymouth)
 - [ ] Compte des élèves remis à neuf chaque jour (en gardant leurs documents) ?

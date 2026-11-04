@@ -2,3 +2,4 @@
 # dispositions de clavier, ocmintux refait ses ajouts (ocmintux-config --declenche).
 interest-noawait /usr/lib/os-release
 interest-noawait /usr/share/X11/xkb/rules
+interest-noawait /usr/share/applications
