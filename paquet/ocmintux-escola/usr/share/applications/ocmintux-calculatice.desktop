@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Calcul@TICE
+Comment=Calcul mental du CP à la 3e, en ligne (académie de Lille)
+Comment[fr]=Calcul mental du CP à la 3e, en ligne (académie de Lille)
+Comment[oc]=Calcul mental del CP a la 3a, en linha (acadèmia de Lilla)
+Exec=firefox --new-window https://calculatice.ac-lille.fr/
+Icon=accessories-calculator
+Categories=Education;Math;

@@ -76,6 +76,23 @@ jobs:
             test -f /usr/share/backgrounds/ocmintux/ocmintux.png
             test -f /usr/share/locale/oc@gascon/LC_MESSAGES/tuxpaint.mo
             test -s /usr/share/keyrings/ocmintux.gpg
+            # Dépôts de PrimTux et d OnlyOffice : seulement les paquets de la liste
+            apt-get update -q
+            test -z "$(LC_ALL=C apt-cache policy base-files | grep "Candidate:" | grep mint)"
+            LC_ALL=C apt-cache policy tuxblocs | grep -qE "^ +[*]* *[0-9.]+ 990$"
+            LC_ALL=C apt-cache policy onlyoffice-desktopeditors | grep -qE "^ +[*]* *[0-9.-]+ 500$"
+            LC_ALL=C apt-cache policy docspace | grep -q "Candidate: (none)"
+            # OnlyOffice : logiciel des documents par défaut, lancé en français
+            mkdir -p /usr/share/applications
+            printf "[Desktop Entry]\nName=ONLYOFFICE\nExec=/usr/bin/onlyoffice-desktopeditors %%U\nMimeType=application/pdf;text/csv;\n" > /usr/share/applications/onlyoffice-desktopeditors.desktop
+            ocmintux-config
+            grep -x "application/pdf=onlyoffice-desktopeditors.desktop" /etc/xdg/mimeapps.list
+            grep -x "text/csv=onlyoffice-desktopeditors.desktop" /etc/xdg/mimeapps.list
+            grep -q "^Exec=env LANG=fr_FR.UTF-8 LANGUAGE=fr /usr/bin/onlyoffice-desktopeditors" /usr/local/share/applications/onlyoffice-desktopeditors.desktop
+            sed -i "s/^BUREAUTIQUE=.*/BUREAUTIQUE=libreoffice/" /etc/ocmintux/ocmintux.conf
+            ocmintux-config
+            test ! -e /etc/xdg/mimeapps.list
+            sed -i "s/^BUREAUTIQUE=.*/BUREAUTIQUE=onlyoffice/" /etc/ocmintux/ocmintux.conf
             # Autres réglages : français, clavier habituel, sans filtre
             sed -i "s/^LANGUE=.*/LANGUE=fr/; s/^CLAVIER=.*/CLAVIER=azerty/; s/^FILTRE_WEB_ELEVES=.*/FILTRE_WEB_ELEVES=non/" /etc/ocmintux/ocmintux.conf
             ocmintux-config
@@ -115,6 +132,8 @@ jobs:
             test ! -e /usr/lib/firefox/ocmintux.cfg
             test ! -e /etc/X11/Xsession.d/90ocmintux-langue
             test ! -e /etc/ocmintux/ocmintux.conf
+            test ! -e /etc/xdg/mimeapps.list
+            test ! -e /usr/local/share/applications/onlyoffice-desktopeditors.desktop
             test "$(grep -c ocmintux /usr/share/X11/xkb/rules/evdev.xml)" = 0
             grep -x "XKBVARIANT=\"oci\"" /etc/default/keyboard
             id escolans

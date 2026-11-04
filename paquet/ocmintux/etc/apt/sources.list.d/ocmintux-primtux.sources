@@ -1,0 +1,11 @@
+# Dépôt de PrimTux : logiciels éducatifs français pour l'école primaire,
+# choisis par des enseignants (PrimTux : SILL, forge des communs numériques
+# éducatifs du ministère). Seuls les paquets nommés dans
+# /etc/apt/preferences.d/ocmintux-depots peuvent en venir.
+# Clé : PrimTux <contact@primtux.fr>, 02F6 1201 17CE DF6C 69C8 4B81 565D 935F 2BE0 21CA
+Types: deb
+URIs: https://mirrors.o2switch.fr/primtux/repo/debs
+Suites: PrimTux8S-M22
+Components: main
+Architectures: amd64
+Signed-By: /usr/share/keyrings/ocmintux-primtux.gpg

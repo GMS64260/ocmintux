@@ -27,6 +27,7 @@ ELEVES_NOM=Escolans
 FILTRE_WEB_ELEVES=oui
 ACCUEIL_ELEVES=https://www.qwantjunior.com/
 APPLIS_EN_FRANCAIS=
+BUREAUTIQUE=onlyoffice
 # shellcheck source=/dev/null
 [ -r "$CONF" ] && . "$CONF"
 
@@ -164,6 +165,41 @@ appliquer_applis_francais() {
         n=$((n + 1))
     done < <(cat "$PARTAGE/applis-en-francais" 2>/dev/null; for ligne in $APPLIS_EN_FRANCAIS; do echo "$ligne"; done)
     echo "logiciels lancés en français : $n"
+}
+
+# Logiciel par défaut des documents (traitement de texte, tableur,
+# présentation, PDF...) : OnlyOffice, pour tous les types de fichiers qu'il
+# déclare. /etc/xdg/mimeapps.list passe avant les choix de Mint
+# (/usr/share/applications/mimeapps.list) ; le choix d'un compte (clic droit,
+# « Ouvrir avec ») passe encore avant. BUREAUTIQUE=libreoffice : choix de Mint.
+MIMEAPPS=/etc/xdg/mimeapps.list
+ONLYOFFICE=onlyoffice-desktopeditors.desktop
+appliquer_bureautique() {
+    local types t
+    case "$BUREAUTIQUE" in
+        onlyoffice|libreoffice) ;;
+        *) echo "ocmintux-config : BUREAUTIQUE=$BUREAUTIQUE inconnu (onlyoffice ou libreoffice)" >&2; return 1 ;;
+    esac
+    if [ "$BUREAUTIQUE" = libreoffice ] || [ ! -f "$MENUS/$ONLYOFFICE" ]; then
+        if [ -f "$MIMEAPPS" ] && grep -q '^# ocmintux-config' "$MIMEAPPS"; then rm -f "$MIMEAPPS"; fi
+        if [ "$BUREAUTIQUE" = libreoffice ]; then
+            echo "documents : choix de Linux Mint"
+        else
+            echo "documents : OnlyOffice pas encore installé, choix de Linux Mint"
+        fi
+        return 0
+    fi
+    if [ -f "$MIMEAPPS" ] && ! grep -q '^# ocmintux-config' "$MIMEAPPS"; then
+        echo "documents : $MIMEAPPS écrit à la main, laissé tel quel"
+        return 0
+    fi
+    types=$(sed -n '/^\[Desktop Entry\]/,/^\[/{s/^MimeType=//p}' "$MENUS/$ONLYOFFICE" | head -n1 | tr ';' ' ')
+    {
+        echo "# ocmintux-config : documents ouverts par OnlyOffice (BUREAUTIQUE dans /etc/ocmintux/ocmintux.conf)."
+        echo "[Default Applications]"
+        for t in $types; do echo "$t=$ONLYOFFICE"; done
+    } > "$MIMEAPPS"
+    echo "documents : OnlyOffice ($(echo "$types" | wc -w) types de fichiers, PDF compris)"
 }
 
 # Firefox (paquet Mint, /usr/lib/firefox) : réglages d'OcMintux par
@@ -382,6 +418,7 @@ retirer() {
     fi
     rm -f "$XSESSION_LANGUE" "$FIREFOX/defaults/pref/ocmintux.js" "$FIREFOX/ocmintux.cfg"
     retirer_applis_francais
+    if [ -f "$MIMEAPPS" ] && grep -q "^# ocmintux-config" "$MIMEAPPS"; then rm -f "$MIMEAPPS"; fi
     retirer_registre_xkb
     # Un clavier réglé sur la disposition d'OcMintux, qui va disparaître :
     # retour à l'AZERTY occitan, connu de Mint.
@@ -394,7 +431,7 @@ retirer() {
 
 case "$MODE" in
     --retirer)   retirer; exit 0 ;;
-    --declenche) choisir_langue; appliquer_identite; appliquer_registre_xkb; appliquer_applis_francais >/dev/null; exit 0 ;;
+    --declenche) choisir_langue; appliquer_identite; appliquer_registre_xkb; appliquer_applis_francais >/dev/null; appliquer_bureautique >/dev/null || true; exit 0 ;;
     ''|--premier-demarrage) ;;
     *) echo "usage : sudo ocmintux-config" >&2; exit 1 ;;
 esac
@@ -411,6 +448,7 @@ appliquer_eleves
 appliquer_gcompris
 appliquer_firefox
 appliquer_applis_francais
+appliquer_bureautique
 
 if [ "$MODE" = --premier-demarrage ]; then
     mkdir -p "$ETAT"

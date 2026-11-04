@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Vikidia
+Comment=L'encyclopédie des 8-13 ans, sans connexion
+Comment[fr]=L'encyclopédie des 8-13 ans, sans connexion
+Comment[oc]=L'enciclopèdia dels 8-13 ans, sens connexion
+Exec=env LANG=fr_FR.UTF-8 LANGUAGE=fr /usr/share/ocmintux-escola/vikidia
+Icon=accessories-dictionary
+Categories=Education;
+TryExec=kiwix-desktop

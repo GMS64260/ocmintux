@@ -1,0 +1,9 @@
+# Dépôt officiel d'OnlyOffice (bureautique). Seul onlyoffice-desktopeditors
+# peut en venir (voir /etc/apt/preferences.d/ocmintux-depots).
+# Clé : Ascensio System Limited (ONLYOFFICE), E09C A29F 6E17 8040 EF22 B409 8320 CA65 CB2D E8E5
+Types: deb
+URIs: https://download.onlyoffice.com/repo/debian
+Suites: squeeze
+Components: main
+Architectures: amd64
+Signed-By: /usr/share/keyrings/ocmintux-onlyoffice.gpg

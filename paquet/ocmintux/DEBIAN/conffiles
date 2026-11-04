@@ -1,2 +1,5 @@
 /etc/apt/sources.list.d/ocmintux.sources
 /etc/xdg/autostart/ocmintux-session-eleves.desktop
+/etc/apt/sources.list.d/ocmintux-primtux.sources
+/etc/apt/sources.list.d/ocmintux-onlyoffice.sources
+/etc/apt/preferences.d/ocmintux-depots

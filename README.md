@@ -18,7 +18,7 @@ Besoins : ceux de Linux Mint 22.3 : PC 64 bits, 2 Go de mémoire (4 Go recommand
 | **Langue** | Interface en occitan (`oc_FR`) : Cinnamon, Nemo et les outils de Mint sont déjà traduits. Ce qui ne l'est pas s'affiche en français, pas en anglais. Option béarnais (`LANGUE=bearnes`). |
 | **Élèves** | Un compte commun **Escolans** : on clique sur son nom, sans mot de passe. Pas de droits d'administration, écran jamais verrouillé, pas d'écran d'accueil de Mint ni d'icône de mises à jour. Dans Firefox : web filtré par [DNS4EU](https://www.joindns4.eu/) (protection des enfants, sans publicités), réglage verrouillé, page d'accueil Qwant Junior. |
 | **Enseignants** | Le compte créé à l'installation (« regent » avec l'installation automatique) administre le PC. |
-| **Logiciels** | GCompris, Tux Paint, TuxMath, Tux Typing, KTouch, KLettres, KGeography, Pysiogame, Stellarium, échecs, OpenBoard (paquet `ocmintux-escola`). Firefox et LibreOffice en occitan, dictionnaire occitan. GCompris, qui n'existe pas en occitan, reste en français au lieu de basculer en anglais. |
+| **Logiciels** | Paquet `ocmintux-escola`, que des logiciels maintenus, en occitan ou en français. **En occitan** : Tux Paint, KTouch, KLettres, KGeography, échecs, LibreOffice. **En français** : GCompris, Stellarium, et les logiciels choisis par [PrimTux](https://primtux.fr) (inscrit au SILL, code sur la forge des communs numériques éducatifs du ministère) : Tuxblocs, Fracatux, tables, dizaines, GeoGebra, qDictionnaire, **Vikidia hors ligne**, pendu pédagogique, encodage de mots, Scratch, ScratchJr, Do.doc, OpenBoard, Logiquiz, AuTableau, La classe du lama, polices de l'école ; Calcul@TICE en ligne (académie de Lille). **OnlyOffice** ouvre les documents et les PDF. Les logiciels sans occitan qui basculeraient en anglais sont lancés en français. |
 | **Installation** | ISO OcMintux : session d'essai et installateur en occitan. ISO de déploiement : le PC s'installe sans une question (tout le disque est effacé), nom de PC `ocmintux-xxxx`, compte des enseignants créé avec le mot de passe choisi à la construction. |
 | **Clavier** | AZERTY occitan (`fr(oci)`) : les lettres occitanes en accès direct. Pour un clavier Apple (iMac) : `CLAVIER=mac`, disposition « Occitan (Macintosh) » d'OcMintux, symboles à leur place et lettres occitanes avec la touche Option de droite (Option+a á, i í, o ó, p ò, u ú). |
 | **Mises à jour** | Celles du gestionnaire de mises à jour de Mint, automatiques, une fois par jour : Ubuntu, Mint et nouvelles versions d'OcMintux (dépôt apt du projet). |
@@ -26,6 +26,8 @@ Besoins : ceux de Linux Mint 22.3 : PC 64 bits, 2 Go de mémoire (4 Go recommand
 | **Identité** | Fond d'écran et écran de connexion OcMintux, nom du système (`PRETTY_NAME`), menus de démarrage de la clé. |
 
 Tout se règle dans un seul fichier, `/etc/ocmintux/ocmintux.conf`.
+
+**Dépôts tiers** : OcMintux ajoute celui de PrimTux et celui d'OnlyOffice, signés, avec une liste fermée de paquets (`/etc/apt/preferences.d/ocmintux-depots`) : rien d'autre ne peut en venir, en particulier pas le système de PrimTux.
 
 ## Ce qu'OcMintux ne fait pas
 

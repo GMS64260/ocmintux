@@ -1,16 +1,27 @@
 Package: ocmintux-escola
-Version: 0.1.3
+Version: 0.1.4
 Architecture: all
 Section: education
 Priority: optional
 Maintainer: Guillaume GOMES DA NAVE <guillaume.gomes@laposte.net>
 Homepage: https://github.com/GMS64260/ocmintux
-Depends: gcompris-qt, tuxpaint, tuxmath, tuxtype
-Recommends: tuxpaint-stamps-default, ktouch, klettres, kgeography, pysiogame, stellarium, gnome-chess, openboard
+Depends: gcompris-qt, tuxpaint
+Recommends: firefox, tuxpaint-stamps-default, ktouch, klettres, kgeography, stellarium, gnome-chess, kiwix,
+ tuxblocs, fracatux, multiples, table-d-addition, table-de-pythagore, dizaines, geogebra5,
+ qdictionnaire, encoder-mots, pendu-peda-gtk, kiwix-vikidia,
+ scratch-desktop, scratchjr, dodoc-primtux,
+ openboard (>= 1.7), openboard-applications, logiquiz, autableau-primtux, laclassedulama, lamatools,
+ polices-ecole-primtux, police-luciole-primtux, onlyoffice-desktopeditors
 Description: logiciels éducatifs d'OcMintux, du CP au CM2
- Paquet sans contenu qui installe les logiciels éducatifs d'OcMintux :
- GCompris, Tux Paint, TuxMath, Tux Typing ; et, en recommandations (que
- l'on peut désinstaller une à une) : frappe au clavier (KTouch), lettres
- (KLettres), géographie (KGeography), calcul (Pysiogame), astronomie
- (Stellarium), échecs, et OpenBoard pour le tableau numérique des
- enseignants.
+ Installe les logiciels de l'école, en occitan ou en français, tous
+ maintenus :
+  - en occitan : Tux Paint, KTouch (frappe au clavier), KLettres,
+    KGeography, échecs ;
+  - en français : GCompris, Stellarium, et les logiciels choisis par
+    PrimTux (dépôt PrimTux, liste fermée) : Tuxblocs, Fracatux, tables
+    d'addition et de Pythagore, dizaines, GeoGebra, qDictionnaire,
+    Vikidia hors ligne, pendu pédagogique, encodage de mots, Scratch,
+    ScratchJr, Do.doc, OpenBoard, Logiquiz, AuTableau, La classe du lama,
+    polices de l'école et Luciole ;
+  - OnlyOffice (dépôt d'OnlyOffice), logiciel des documents par défaut.
+ Plus des raccourcis : Vikidia hors ligne, Calcul@TICE en ligne.

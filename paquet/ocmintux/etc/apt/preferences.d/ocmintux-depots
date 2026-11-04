@@ -1,0 +1,21 @@
+# OcMintux : ce que les dépôts tiers ont le droit d'installer.
+#
+# Dépôt de PrimTux : rien, sauf les logiciels éducatifs de la liste. Son
+# base-files, ses thèmes, profils et menus renommeraient ou changeraient le
+# système. 990 : la version de PrimTux passe avant celle d'Ubuntu (OpenBoard).
+Package: *
+Pin: origin mirrors.o2switch.fr
+Pin-Priority: -1
+
+Package: tuxblocs fracatux multiples table-d-addition table-de-pythagore dizaines geogebra5 qdictionnaire encoder-mots pendu-peda-gtk kiwix-vikidia scratch-desktop scratchjr dodoc-primtux openboard openboard-applications logiquiz autableau-primtux laclassedulama lamatools polices-ecole-primtux police-luciole-primtux
+Pin: origin mirrors.o2switch.fr
+Pin-Priority: 990
+
+# Dépôt d'OnlyOffice : seulement les éditeurs de bureau (pas les serveurs).
+Package: *
+Pin: origin download.onlyoffice.com
+Pin-Priority: -1
+
+Package: onlyoffice-desktopeditors
+Pin: origin download.onlyoffice.com
+Pin-Priority: 500

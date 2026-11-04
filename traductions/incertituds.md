@@ -11,3 +11,5 @@ Textes nouveaux d'OcMintux (ceux repris d'Occitux y ont déjà été vérifiés 
 | `demarrage.oem` | Installacion pels fabricants / entaus fabricants | *fabricant* : forme courante, non vérifiée dans le corpus. |
 | `demarrage.materiel` | Deteccion del material / deu material | *material* pour « matériel informatique » : à confirmer. |
 | `compte.enseignants` | Regent | Mot des Calandretas pour l'enseignant (attesté en gascon, glossaire d'Occitux) ; féminin *regenta* : le nom affiché peut être changé dans « Comptes ». |
+| `ocmintux-vikidia.desktop` | L'enciclopèdia dels 8-13 ans, sens connexion | Languedocien ; une entrée de menu n'a qu'une colonne `oc` (pas de béarnais : *deus*, *shens*). |
+| `ocmintux-calculatice.desktop` | Calcul mental del CP a la 3a, en linha (acadèmia de Lilla) | *Lilla* pour Lille ; *3a* pour « 3e » (classe de troisième) à confirmer. |

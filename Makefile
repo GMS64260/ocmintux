@@ -3,7 +3,7 @@ DEB     := construction/ocmintux_$(VERSION)_all.deb
 ESCOLA_VERSION := $(shell sed -n 's/^Version: //p' paquet/ocmintux-escola/DEBIAN/control)
 ESCOLA  := construction/ocmintux-escola_$(ESCOLA_VERSION)_all.deb
 SCRIPTS := paquet/ocmintux/usr/sbin/ocmintux-config paquet/ocmintux/usr/sbin/ocmintux-ventilation \
-           paquet/ocmintux/usr/share/ocmintux/session-eleves.sh \
+           paquet/ocmintux/usr/share/ocmintux/session-eleves.sh paquet/ocmintux-escola/usr/share/ocmintux-escola/vikidia \
            paquet/ocmintux/DEBIAN/postinst paquet/ocmintux/DEBIAN/prerm paquet/ocmintux/DEBIAN/postrm \
            construire/construire-iso.sh construire/essayer-vm.sh construire/depot-apt.sh \
            construire/preseed/choisir-disque.sh construire/preseed/apres-installation.sh construire/essai-ventilation.sh
@@ -37,8 +37,9 @@ $(DEB): $(shell find paquet/ocmintux -type f) $(PO) identite/ocmintux.svg identi
 	done
 	dpkg-deb --root-owner-group -Zxz --build $(RACINE) $@
 
-$(ESCOLA): paquet/ocmintux-escola/DEBIAN/control
+$(ESCOLA): $(shell find paquet/ocmintux-escola -type f)
 	mkdir -p construction
+	chmod 0755 paquet/ocmintux-escola/usr/share/ocmintux-escola/vikidia
 	dpkg-deb --root-owner-group -Zxz --build paquet/ocmintux-escola $@
 
 # make iso ISO=/chemin/linuxmint-22.3-cinnamon-64bit.iso

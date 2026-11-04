@@ -20,7 +20,10 @@
 ## 0.2 : finitions
 
 - [x] Logiciels sans occitan lancés en français au lieu de l'anglais (Stellarium, OpenBoard ; mots français dans Tux Typing) : `/usr/share/ocmintux/applis-en-francais`, `APPLIS_EN_FRANCAIS`
-- [ ] Logiciels éducatifs de PrimTux (dépôt PrimTux, liste fermée) : en attente de l'accord de Guillaume
+- [x] Logiciels éducatifs de PrimTux (dépôt PrimTux, liste fermée, paquets lus avant d'être retenus) et OnlyOffice (dépôt officiel), logiciel des documents et PDF par défaut (`BUREAUTIQUE`)
+- [x] Retirés : Pysiogame (ancien, anglais), TuxMath et Tux Typing (abandonnés), OpenBoard 1.6 d'Ubuntu (remplacé par la 1.7 de PrimTux)
+- [ ] Calcul@TICE, Le Conjugueur, Phyloboîte hors ligne : demandent des bibliothèques 32 bits anciennes (Calcul@TICE en ligne en attendant)
+- [ ] Menu des logiciels éducatifs rangé par matière (tout est dans « Educacion »)
 
 - [ ] Diaporama de l'installateur : déjà en occitan chez Mint (vu en VM) ; y présenter OcMintux et les Calandretas
 - [ ] Logo OcMintux dans le menu Cinnamon et au démarrage (Plymouth)

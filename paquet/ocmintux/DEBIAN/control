@@ -1,11 +1,11 @@
 Package: ocmintux
-Version: 0.1.3
+Version: 0.1.4
 Architecture: all
 Section: localization
 Priority: optional
 Maintainer: Guillaume GOMES DA NAVE <guillaume.gomes@laposte.net>
 Homepage: https://github.com/GMS64260/ocmintux
-Depends: locales, keyboard-configuration, language-pack-oc, language-pack-gnome-oc, language-pack-fr, language-pack-gnome-fr, adduser, passwd
+Depends: ca-certificates, locales, keyboard-configuration, language-pack-oc, language-pack-gnome-oc, language-pack-fr, language-pack-gnome-fr, adduser, passwd
 Recommends: ocmintux-escola, firefox-locale-oc, firefox-locale-fr, libreoffice-l10n-oc, libreoffice-l10n-fr, hunspell-oc, hunspell-fr, mintupdate
 Conflicts: occitux
 Description: Linux Mint en occitan pour les Calandretas

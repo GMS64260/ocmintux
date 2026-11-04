@@ -184,11 +184,29 @@ cp "${DEBS[@]}" "$RACINE/tmp/ocmintux/"
 echo "Installation de $(for d in "${DEBS[@]}"; do dpkg-deb -f "$d" Package Version | paste -sd' '; done | paste -sd,) dans le système..."
 # OCMINTUX_CONSTRUCTION : le compte des élèves attend le premier démarrage du
 # PC installé (voir appliquer_eleves dans ocmintux-config).
+# Deux temps : ocmintux ajoute les dépôts de PrimTux et d'OnlyOffice, d'où
+# viennent une partie des logiciels d'ocmintux-escola ; apt doit les lire
+# avant d'installer celui-ci.
+PREMIERS=() ESCOLA=()
+for deb in "${DEBS[@]}"; do
+    if [ "$(dpkg-deb -f "$deb" Package)" = ocmintux-escola ]; then
+        ESCOLA+=("/tmp/ocmintux/$(basename "$deb")")
+    else
+        PREMIERS+=("/tmp/ocmintux/$(basename "$deb")")
+    fi
+done
 chroot "$RACINE" /usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 OCMINTUX_CONSTRUCTION=1 sh -c '
     apt-get update -q &&
-    apt-get install -y -q --install-recommends /tmp/ocmintux/*.deb &&
-    apt-get clean
-'
+    apt-get install -y -q --install-recommends "$@"
+' sh "${PREMIERS[@]}"
+if [ ${#ESCOLA[@]} -gt 0 ]; then
+    echo "Logiciels de l'école (PrimTux, OnlyOffice : plusieurs Go à télécharger)..."
+    chroot "$RACINE" /usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 OCMINTUX_CONSTRUCTION=1 sh -c '
+        apt-get update -q &&
+        apt-get install -y -q --install-recommends "$@"
+    ' sh "${ESCOLA[@]}"
+fi
+chroot "$RACINE" apt-get clean
 echo "Langue par défaut : $LANGUE"
 echo "Clavier par défaut : $CLAVIER"
 sed -i -e "s/^LANGUE=.*/LANGUE=$LANGUE/" -e "s/^CLAVIER=.*/CLAVIER=$CLAVIER/" "$RACINE/etc/ocmintux/ocmintux.conf"

@@ -7,5 +7,4 @@
 org.stellarium.Stellarium
 openboard
 ch.openboard.OpenBoard
-# Tux Typing : menus déjà en français (repli), mais mots anglais par défaut.
-tuxtype --theme french
+onlyoffice-desktopeditors

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Vikidia hors ligne (paquet kiwix-vikidia de PrimTux) : ouvre la plus
+# récente des encyclopédies Vikidia installées (noms datés, triés par le shell).
+zim=
+for f in /usr/share/kiwix-vikidia/*.zim; do
+    [ -f "$f" ] && zim=$f
+done
+[ -n "$zim" ] || { echo "vikidia : paquet kiwix-vikidia absent" >&2; exit 1; }
+exec kiwix-desktop "$zim"
